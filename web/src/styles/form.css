@@ -1,0 +1,61 @@
+/* 表单组件固定宽度样式 */
+
+
+/* 基础表单组件宽度 */
+.form-input {
+  width: 300px;
+  max-width: 100%;
+}
+
+/* 小尺寸表单组件 */
+.form-input-sm {
+  width: 200px;
+  max-width: 100%;
+}
+
+/* 中等尺寸表单组件 */
+.form-input-md {
+  width: 300px;
+  max-width: 100%;
+}
+
+/* 大尺寸表单组件 */
+.form-input-lg {
+  width: 400px;
+  max-width: 100%;
+}
+
+/* 超大尺寸表单组件 */
+.form-input-xl {
+  width: 500px;
+  max-width: 100%;
+}
+
+/* 全宽表单组件 */
+.form-input-full {
+  width: 100%;
+}
+
+/* 自动宽度表单组件 */
+.form-input-auto {
+  width: auto;
+  min-width: 200px;
+  max-width: 100%;
+}
+
+.search-form {margin-bottom: 16px;}
+
+
+/* 搜索表单中的select使用中等宽度 - 提高优先级 */
+.search-form .t-select {
+  width: 300px !important;
+  max-width: 100%;
+}
+
+
+#app .t-card__body {
+  padding-top: 0 !important;
+}
+
+
+
