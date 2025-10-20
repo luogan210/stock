@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Demo - 全栈应用</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="#" class="navbar-brand">Go Demo</a>
+            <ul class="navbar-nav">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#user">用户管理</a></li>
+                <li><a href="#wechat">微信功能</a></li>
+                <li><a href="#upload">文件上传</a></li>
+                <li><a href="#api">API文档</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 提示信息容器 -->
+        <div id="alertContainer"></div>
+
+        <!-- 首页 -->
+        <div id="home" class="page">
+            <div class="card">
+                <h1 class="card-title">欢迎使用 Go Demo 应用</h1>
+                <p>这是一个基于 Gin 框架的全栈 Web 应用，包含以下功能：</p>
+                <ul>
+                    <li>用户注册和登录</li>
+                    <li>微信小程序 urlLink 生成</li>
+                    <li>RESTful API 接口</li>
+                    <li>统一响应格式</li>
+                </ul>
+                
+                <div id="userInfo"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <h3 class="card-title">快速开始</h3>
+                        <p>点击上方导航栏开始使用各项功能。</p>
+                        <a href="#user" class="btn btn-primary">用户管理</a>
+                        <a href="#wechat" class="btn btn-success">微信功能</a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <h3 class="card-title">API 接口</h3>
+                        <p>所有 API 接口都遵循统一的响应格式。</p>
+                        <a href="#api" class="btn btn-primary">查看文档</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用户管理页面 -->
+        <div id="user" class="page" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">用户管理</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <h3 class="card-title">用户登录</h3>
+                            <form id="loginForm">
+                                <div class="form-group">
+                                    <label for="loginUsername" class="form-label">用户名</label>
+                                    <input type="text" id="loginUsername" name="username" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword" class="form-label">密码</label>
+                                    <input type="password" id="loginPassword" name="password" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">登录</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <h3 class="card-title">用户注册</h3>
+                            <form id="registerForm">
+                                <div class="form-group">
+                                    <label for="registerUsername" class="form-label">用户名</label>
+                                    <input type="text" id="registerUsername" name="username" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerEmail" class="form-label">邮箱</label>
+                                    <input type="email" id="registerEmail" name="email" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerPassword" class="form-label">密码</label>
+                                    <input type="password" id="registerPassword" name="password" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-success">注册</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 微信功能页面 -->
+        <div id="wechat" class="page" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">微信小程序 urlLink 生成</h2>
+                
+                <div class="wechat-section">
+                    <h3>功能说明</h3>
+                    <p>生成微信小程序 urlLink，支持设置过期时间和查询参数。</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <h3 class="card-title">生成 urlLink</h3>
+                            <form id="wechatForm">
+                                <div class="form-group">
+                                    <label for="path" class="form-label">小程序页面路径 *</label>
+                                    <input type="text" id="path" name="path" class="form-control" 
+                                           placeholder="pages/index/index" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="query" class="form-label">查询参数</label>
+                                    <input type="text" id="query" name="query" class="form-control" 
+                                           placeholder="id=123&type=test">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="isExpire" name="is_expire">
+                                        设置过期时间
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="expireType" class="form-label">过期类型</label>
+                                    <select id="expireType" name="expire_type" class="form-control">
+                                        <option value="0">指定时间失效</option>
+                                        <option value="1">指定天数失效</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="expireTime" class="form-label">过期时间戳</label>
+                                    <input type="number" id="expireTime" name="expire_time" class="form-control" 
+                                           placeholder="Unix时间戳（当过期类型为0时使用）">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="expireInterval" class="form-label">过期天数</label>
+                                    <input type="number" id="expireInterval" name="expire_interval" class="form-control" 
+                                           placeholder="天数（当过期类型为1时使用）">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">生成 urlLink</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <h3 class="card-title">生成结果</h3>
+                            <div id="wechatResult">
+                                <p class="text-center">请填写表单并点击生成按钮</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件上传页面 -->
+        <div id="upload" class="page" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">大文件上传</h2>
+                <p>支持大文件分片上传，具有并发控制、断点续传等功能。</p>
+                <a href="/upload" class="btn btn-primary">进入上传页面</a>
+            </div>
+        </div>
+
+        <!-- API文档页面 -->
+        <div id="api" class="page" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">API 文档</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <h3 class="card-title">用户相关 API</h3>
+                            <div class="code-block">
+                                <strong>POST /api/user/register</strong><br>
+                                用户注册<br><br>
+                                <strong>POST /api/user/login</strong><br>
+                                用户登录<br><br>
+                                <strong>GET /api/user/profile</strong><br>
+                                获取用户信息
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <h3 class="card-title">微信相关 API</h3>
+                            <div class="code-block">
+                                <strong>POST /api/wechat/url-link</strong><br>
+                                生成微信小程序 urlLink<br><br>
+                                <strong>GET /api/wechat/url-link/:id</strong><br>
+                                获取 urlLink 信息
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">统一响应格式</h3>
+                    <div class="code-block">
+{
+    "success": true,
+    "message": "操作成功",
+    "data": {
+        // 具体数据
+    }
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html> 
