@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { 
   getEnabledTradingStrategies
