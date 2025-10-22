@@ -1,12 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/home/Home.vue'
 import TradingPlan from '../views/trading-plan/TradingPlan.vue'
-import TradingPlanForm  from '../views/trading-plan/TradingPlanForm.vue'
+import PlanFormService from '../views/trading-plan/PlanFormService.vue'
 import TradingLog from '../views/trading-log/TradingLog.vue'
-import TradingLogForm from '../views/trading-log/TradingLogForm.vue'
+import LogFormService from '../views/trading-log/LogFormService.vue'
 import TradingReview from '../views/trading-review/TradingReview.vue'
-import TradingReviewForm from '../views/trading-review/TradingReviewForm.vue'
+import ReviewFormService from '../views/trading-review/ReviewFormService.vue'
 import StockManagement from '../views/stock/StockManagement.vue'
+import StockFormService from '../views/stock/StockFormService.vue'
 
 const routes = [
   {
@@ -16,7 +17,11 @@ const routes = [
   },
   {
     path: '/stock',
-    redirect: '/trading-plan'
+    name: 'StockManagement',
+    component: StockManagement,
+    meta: {
+      title: '股票管理'
+    }
   },
   {
     path: '/trading-plan',
@@ -29,7 +34,7 @@ const routes = [
   {
     path: '/trading-plan/create',
     name: 'CreateTradingPlan',
-    component: TradingPlanForm,
+    component: PlanFormService,
     meta: {
       title: '新建交易计划'
     }
@@ -37,7 +42,10 @@ const routes = [
   {
     path: '/trading-plan/edit/:id',
     name: 'EditTradingPlan',
-    component: TradingPlanForm,
+    component: PlanFormService,
+    props: {
+      isEditMode: true
+    },
     meta: {
       title: '编辑交易计划'
     }
@@ -52,8 +60,8 @@ const routes = [
   },
   {
     path: '/trading-log/create',
-    name: 'TradingLogForm',
-    component: TradingLogForm,
+    name: 'CreateTradingLog',
+    component: LogFormService,
     meta: {
       title: '新建交易日志'
     }
@@ -61,7 +69,10 @@ const routes = [
   {
     path: '/trading-log/edit/:id',
     name: 'EditTradingLog',
-    component: TradingLogForm,
+    component: LogFormService,
+    props: {
+      isEditMode: true
+    },
     meta: {
       title: '编辑交易日志'
     }
@@ -77,7 +88,7 @@ const routes = [
   {
     path: '/trading-review/create',
     name: 'CreateTradingReview',
-    component: TradingReviewForm,
+    component: ReviewFormService,
     meta: {
       title: '新建交易复盘'
     }
@@ -85,7 +96,10 @@ const routes = [
   {
     path: '/trading-review/edit/:id',
     name: 'EditTradingReview',
-    component: TradingReviewForm,
+    component: ReviewFormService,
+    props: {
+      isEditMode: true
+    },
     meta: {
       title: '编辑交易复盘'
     }
@@ -96,6 +110,25 @@ const routes = [
     component: StockManagement,
     meta: {
       title: '股票管理'
+    }
+  },
+  {
+    path: '/stock/create',
+    name: 'CreateStock',
+    component: StockFormService,
+    meta: {
+      title: '新增股票'
+    }
+  },
+  {
+    path: '/stock/edit/:id',
+    name: 'EditStock',
+    component: StockFormService,
+    props: {
+      isEditMode: true
+    },
+    meta: {
+      title: '编辑股票'
     }
   },
   {

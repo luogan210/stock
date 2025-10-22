@@ -1,0 +1,104 @@
+package storage
+
+import (
+	"database/sql"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	_ "modernc.org/sqlite"
+)
+
+type DB struct {
+	SQL *sql.DB
+}
+
+// OpenSQLite opens (and creates if missing) a SQLite database at the given path.
+func OpenSQLite(path string) (*DB, error) {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return nil, fmt.Errorf("mkdir data dir: %w", err)
+	}
+	dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)", path)
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("open sqlite: %w", err)
+	}
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("ping sqlite: %w", err)
+	}
+	return &DB{SQL: db}, nil
+}
+
+// Migrate applies minimal schema needed for the app.
+func (d *DB) Migrate() error {
+	stmts := []string{
+		`CREATE TABLE IF NOT EXISTS stocks (
+            id TEXT PRIMARY KEY,
+            code TEXT NOT NULL,
+            name TEXT NOT NULL,
+            region TEXT,
+            currency TEXT,
+            category TEXT,
+            enabled INTEGER DEFAULT 1,
+            remark TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );`,
+		`CREATE TABLE IF NOT EXISTS plans (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            type TEXT,
+            stock_code TEXT,
+            stock_name TEXT,
+            strategy TEXT,
+            trading_strategy TEXT,
+            target_price REAL,
+            quantity INTEGER,
+            stop_loss REAL,
+            take_profit REAL,
+            start_time TEXT,
+            end_time TEXT,
+            risk_level TEXT,
+            description TEXT,
+            remark TEXT,
+            status TEXT DEFAULT 'active',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );`,
+		`CREATE TABLE IF NOT EXISTS logs (
+            id TEXT PRIMARY KEY,
+            plan_name TEXT,
+            stock_code TEXT NOT NULL,
+            stock_name TEXT,
+            type TEXT NOT NULL,
+            trading_time TEXT NOT NULL,
+            price REAL NOT NULL,
+            quantity INTEGER NOT NULL,
+            strategy TEXT,
+            remark TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );`,
+		`CREATE TABLE IF NOT EXISTS reviews (
+            id TEXT PRIMARY KEY,
+            period TEXT NOT NULL,
+            review_date TEXT NOT NULL,
+            title TEXT NOT NULL,
+            buy_count INTEGER DEFAULT 0,
+            sell_count INTEGER DEFAULT 0,
+            total_profit REAL DEFAULT 0,
+            summary TEXT NOT NULL,
+            improvements TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );`,
+	}
+	for _, s := range stmts {
+		if _, err := d.SQL.Exec(s); err != nil {
+			return fmt.Errorf("migrate: %w", err)
+		}
+	}
+	return nil
+}
+
+func (d *DB) Close() error { return d.SQL.Close() }

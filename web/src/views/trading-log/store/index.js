@@ -50,30 +50,64 @@ export const useTradingLogStore = defineStore('tradingLog', {
         throw new Error(response.message)
       } catch (error) {
         console.error('创建交易日志失败:', error)
-        // 降级到本地存储
-        const newLog = {
-          ...log,
-          id: log.id || generateId(),
-          createTime: log.createTime || new Date().toLocaleString(),
-          updateTime: new Date().toLocaleString()
+        throw error
+      }
+    },
+    
+    async updateLog(logId, updates) {
+      try {
+        const response = await currentApi.tradingLog.updateLog(logId, updates)
+        if (response.code === 0) {
+          const index = this.logs.findIndex(log => log.id === logId)
+          if (index !== -1) {
+            this.logs[index] = { ...this.logs[index], ...response.data }
+            this.saveToLocalStorage()
+          }
+          return response.data
         }
-        this.logs.unshift(newLog)
-        this.saveToLocalStorage()
-        return newLog
+        throw new Error(response.message)
+      } catch (error) {
+        console.error('更新交易日志失败:', error)
+        // 降级到本地存储
+        const index = this.logs.findIndex(log => log.id === logId)
+        if (index !== -1) {
+          this.logs[index] = { ...this.logs[index], ...updates }
+          this.saveToLocalStorage()
+        }
+        throw error
       }
     },
     
-    updateLog(logId, updates) {
-      const index = this.logs.findIndex(log => log.id === logId)
-      if (index !== -1) {
-        this.logs[index] = { ...this.logs[index], ...updates }
-        this.saveToLocalStorage()
+    async getLogById(logId) {
+      try {
+        const response = await currentApi.tradingLog.getLogDetail(logId)
+        if (response.code === 0) {
+          return response.data
+        }
+        throw new Error(response.message)
+      } catch (error) {
+        console.error('获取交易日志失败:', error)
+        // 降级到本地存储
+        return this.logs.find(log => log.id === logId)
       }
     },
     
-    deleteLog(logId) {
-      this.logs = this.logs.filter(log => log.id !== logId)
-      this.saveToLocalStorage()
+    async deleteLog(logId) {
+      try {
+        const response = await currentApi.tradingLog.deleteLog(logId)
+        if (response.code === 0) {
+          this.logs = this.logs.filter(log => log.id !== logId)
+          this.saveToLocalStorage()
+          return response.data
+        }
+        throw new Error(response.message)
+      } catch (error) {
+        console.error('删除交易日志失败:', error)
+        // 降级到本地存储
+        this.logs = this.logs.filter(log => log.id !== logId)
+        this.saveToLocalStorage()
+        throw error
+      }
     },
     
     saveToLocalStorage() {

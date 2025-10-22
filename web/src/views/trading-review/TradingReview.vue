@@ -54,7 +54,7 @@
               placeholder="选择时间范围"
             />
           </t-form-item>
-          <t-form-item label="操作" name="actions">
+          <t-form-item name="actions" label-width="0">
             <t-space size="small">
               <t-button theme="primary" type="submit">
                 <template #icon>
@@ -90,10 +90,6 @@
           </t-tag>
         </template>
 
-        <!-- 日期范围 -->
-        <template #dateRange="{ row }">
-          <span class="date-range">{{ row.dateRange }}</span>
-        </template>
 
         <!-- 盈亏情况 -->
         <template #profit="{ row }">
@@ -221,10 +217,8 @@ const pagination = reactive({
 const columns = [
   { colKey: 'title', title: '复盘标题' },
   { colKey: 'period', title: '复盘周期' },
-  { colKey: 'dateRange', title: '日期范围' },
   { colKey: 'trades', title: '交易统计' },
   { colKey: 'profit', title: '盈亏情况' },
-  { colKey: 'createTime', title: '创建时间' },
   { colKey: 'operation', title: '操作' }
 ]
 

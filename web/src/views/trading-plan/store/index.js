@@ -49,24 +49,50 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
         throw new Error(response.message)
       } catch (error) {
         console.error('创建交易计划失败:', error)
-        // 降级到本地存储
-        const newPlan = {
-          ...plan,
-          id: plan.id || generateId(),
-          createTime: plan.createTime || new Date().toLocaleString(),
-          updateTime: new Date().toLocaleString()
-        }
-        this.plans.unshift(newPlan)
-        this.saveToLocalStorage()
-        return newPlan
+        // 不再降级到本地存储，直接抛出错误
+        throw error
       }
     },
     
-    updatePlan(planId, updates) {
-      const index = this.plans.findIndex(plan => plan.id === planId)
-      if (index !== -1) {
-        this.plans[index] = { ...this.plans[index], ...updates }
-        this.saveToLocalStorage()
+    async updatePlan(planId, updates) {
+      try {
+        const response = await currentApi.tradingPlan.updatePlan(planId, updates)
+        if (response.code === 0) {
+          const index = this.plans.findIndex(plan => plan.id === planId)
+          if (index !== -1) {
+            this.plans[index] = { ...this.plans[index], ...updates }
+            this.saveToLocalStorage()
+          }
+          return response.data
+        }
+        throw new Error(response.message)
+      } catch (error) {
+        console.error('更新交易计划失败:', error)
+        // 降级到本地更新
+        const index = this.plans.findIndex(plan => plan.id === planId)
+        if (index !== -1) {
+          this.plans[index] = { ...this.plans[index], ...updates }
+          this.saveToLocalStorage()
+        }
+        throw error
+      }
+    },
+    
+    async getPlanById(planId) {
+      try {
+        const response = await currentApi.tradingPlan.getPlanDetail(planId)
+        if (response.code === 0) {
+          return response.data
+        }
+        throw new Error(response.message)
+      } catch (error) {
+        console.error('获取交易计划详情失败:', error)
+        // 降级到本地查找
+        const plan = this.plans.find(plan => plan.id === planId)
+        if (plan) {
+          return plan
+        }
+        throw error
       }
     },
     
@@ -101,9 +127,22 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
       }
     },
     
-    deletePlan(planId) {
-      this.plans = this.plans.filter(plan => plan.id !== planId)
-      this.saveToLocalStorage()
+    async deletePlan(planId) {
+      try {
+        const response = await currentApi.tradingPlan.deletePlan(planId)
+        if (response.code === 0) {
+          this.plans = this.plans.filter(plan => plan.id !== planId)
+          this.saveToLocalStorage()
+          return response.data
+        }
+        throw new Error(response.message)
+      } catch (error) {
+        console.error('删除交易计划失败:', error)
+        // 降级到本地存储
+        this.plans = this.plans.filter(plan => plan.id !== planId)
+        this.saveToLocalStorage()
+        throw error
+      }
     },
     
     saveToLocalStorage() {

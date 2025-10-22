@@ -198,3 +198,30 @@ export function throttle(func, limit) {
     }
   }
 }
+
+/**
+ * 模拟API响应
+ * @param {Function} fn - 要执行的函数
+ * @param {number} delay - 延迟时间（毫秒）
+ * @returns {Promise} 模拟的API响应
+ */
+export function mockResponse(fn, delay = 300) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      try {
+        const result = fn()
+        resolve({
+          data: result,
+          status: 200,
+          message: 'success'
+        })
+      } catch (error) {
+        reject({
+          data: null,
+          status: 400,
+          message: error.message || '请求失败'
+        })
+      }
+    }, delay)
+  })
+}

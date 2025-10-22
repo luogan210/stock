@@ -29,7 +29,7 @@
           </t-menu-item>
           <t-menu-item value="5" @click="goToStockManagement">
             <template #icon>
-              <t-icon name="stock" />
+              <t-icon name="chart" />
             </template>
             股票管理
           </t-menu-item>
@@ -60,6 +60,8 @@ const currentMenuValue = computed(() => {
     return '3'
   } else if (path.startsWith('/trading-review')) {
     return '4'
+  } else if (path.startsWith('/stock')) {
+    return '5'
   }
   return '1' // 默认选中首页
 })

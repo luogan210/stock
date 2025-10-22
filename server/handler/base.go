@@ -1,8 +1,7 @@
 package handler
 
 import (
-	"go-demo/middleware"
-	"go-demo/model"
+	"server/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,17 +15,17 @@ func NewBaseHandler() *BaseHandler {
 }
 
 // GetCurrentUser 获取当前用户信息
-func (h *BaseHandler) GetCurrentUser(c *gin.Context) *model.UserInfo {
+func (h *BaseHandler) GetCurrentUser(c *gin.Context) any {
 	return middleware.GetCurrentUser(c)
 }
 
 // GetCurrentUserOrNil 获取当前用户信息，如果未登录返回nil
-func (h *BaseHandler) GetCurrentUserOrNil(c *gin.Context) *model.UserInfo {
+func (h *BaseHandler) GetCurrentUserOrNil(c *gin.Context) any {
 	return middleware.GetCurrentUser(c)
 }
 
 // GetCurrentUserRequired 获取当前用户信息，如果未登录返回错误
-func (h *BaseHandler) GetCurrentUserRequired(c *gin.Context) (*model.UserInfo, bool) {
+func (h *BaseHandler) GetCurrentUserRequired(c *gin.Context) (any, bool) {
 	user := middleware.GetCurrentUser(c)
 	if user == nil {
 		h.UnauthorizedError(c, "请先登录")

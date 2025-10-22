@@ -32,10 +32,9 @@
           <t-form-item label="状态" name="status">
             <t-select class="form-input-md" v-model="searchForm.status" placeholder="状态筛选">
               <t-option value="" label="全部状态" />
-              <t-option value="active" label="进行中" />
+              <t-option value="pending" label="未执行" />
+              <t-option value="executing" label="执行中" />
               <t-option value="completed" label="已完成" />
-              <t-option value="paused" label="已暂停" />
-              <t-option value="cancelled" label="已取消" />
             </t-select>
           </t-form-item>
           <t-form-item label="方向" name="type">
@@ -51,7 +50,7 @@
               placeholder="选择创建时间范围"
             />
           </t-form-item>
-          <t-form-item label="操作" name="actions">
+          <t-form-item name="actions" label-width="0">
             <t-space size="small">
               <t-button theme="primary" type="submit">
                 <template #icon>
@@ -150,12 +149,36 @@
     <t-dialog
       v-model:visible="showDetailDialog"
       :header="selectedPlan?.name || '计划详情'"
-      width="800px"
+      width="600px"
       :confirm-btn="null"
       :cancel-btn="null"
     >
       <div v-if="selectedPlan" class="plan-detail">
-        <t-descriptions :data="getPlanDetailData(selectedPlan)" :column="2" />
+        <div class="detail-grid">
+          <div v-for="item in getPlanDetailData(selectedPlan)" :key="item.label" class="detail-item">
+            <span class="detail-label">{{ item.label }}:</span>
+            <span class="detail-content">{{ item.content }}</span>
+          </div>
+        </div>
+        
+        <!-- 选股策略说明部分 -->
+        <div v-if="selectedPlan.strategy || selectedPlan.tradingStrategy" class="strategy-section">
+          <h4 class="strategy-title">选股策略说明</h4>
+          <div class="strategy-content">
+            <div v-if="selectedPlan.strategy" class="strategy-item">
+              <h5>选股策略：{{ getStrategyName(selectedPlan.strategy) }}</h5>
+              <p>{{ getStrategyDescription(selectedPlan.strategy) }}</p>
+            </div>
+            <div v-if="selectedPlan.tradingStrategy" class="strategy-item">
+              <h5>交易策略：{{ getTradingStrategyName(selectedPlan.tradingStrategy) }}</h5>
+              <p>{{ getTradingStrategyDescription(selectedPlan.tradingStrategy) }}</p>
+            </div>
+            <div v-if="selectedPlan.description" class="strategy-item">
+              <h5>详细说明</h5>
+              <p>{{ selectedPlan.description }}</p>
+            </div>
+          </div>
+        </div>
         
         <div class="detail-actions">
           <t-space size="small">
@@ -205,7 +228,7 @@ const columns = [
   { colKey: 'stopLoss', title: '止损价格', width: 100 },
   { colKey: 'quantity', title: '数量', width: 80 },
   { colKey: 'status', title: '状态', width: 100 },
-  { colKey: 'createTime', title: '创建时间', width: 150 },
+  { colKey: 'createdAt', title: '创建时间', width: 150 },
   { colKey: 'operation', title: '操作', width: 150 }
 ]
 
@@ -232,35 +255,95 @@ const getActionOptions = (row) => {
   
   if (row.status === 'active') {
     options.push(
-      { content: '暂停计划', value: 'pause' },
-      { content: '完成计划', value: 'complete' }
+      { content: '暂停计划', value: 'pause', row: row },
+      { content: '完成计划', value: 'complete', row: row }
     )
   } else if (row.status === 'paused') {
     options.push(
-      { content: '恢复计划', value: 'resume' },
-      { content: '取消计划', value: 'cancel' }
+      { content: '恢复计划', value: 'resume', row: row },
+      { content: '取消计划', value: 'cancel', row: row }
     )
   }
   
-  options.push({ content: '删除计划', value: 'delete' })
+  options.push({ content: '删除计划', value: 'delete', row: row })
   return options
 }
 
-const getPlanDetailData = (plan) => [
-  { label: '计划名称', content: plan.name },
-  { label: '股票代码', content: plan.stockCode },
-  { label: '股票名称', content: plan.stockName },
-  { label: '交易方向', content: TRADING_TYPE_TEXT[plan.type] || plan.type },
-  { label: '计划买进价格', content: `¥${plan.targetPrice}` },
-  { label: '计划数量', content: plan.quantity },
-  { label: '当前状态', content: getStatusText(plan.status) },
-  { label: '创建时间', content: plan.createTime },
-  { label: '更新时间', content: plan.updateTime },
-  { label: '备注', content: plan.remark || '无' }
-]
+const getPlanDetailData = (plan) => {
+  return [
+    { label: '计划名称', content: plan.name },
+    { label: '股票代码', content: plan.stockCode },
+    { label: '股票名称', content: plan.stockName },
+    { label: '交易方向', content: TRADING_TYPE_TEXT[plan.type] || plan.type },
+    { label: '计划买进价格', content: `¥${plan.targetPrice}` },
+    { label: '计划数量', content: plan.quantity },
+    { label: '止损价格', content: plan.stopLoss ? `¥${plan.stopLoss}` : '未设置' },
+    { label: '止盈价格', content: plan.takeProfit ? `¥${plan.takeProfit}` : '未设置' },
+    { label: '选股策略', content: plan.strategy || '未设置' },
+    { label: '交易策略', content: plan.tradingStrategy || '未设置' },
+    { label: '风险等级', content: plan.riskLevel || '未设置' },
+    { label: '策略说明', content: plan.description || '无' },
+    { label: '当前状态', content: getStatusText(plan.status) },
+    { label: '创建时间', content: plan.createdAt },
+    { label: '更新时间', content: plan.updatedAt },
+    { label: '备注', content: plan.remark || '无' }
+  ]
+}
 
 const goToCreatePlan = () => {
   router.push('/trading-plan/create')
+}
+
+// 获取策略名称
+const getStrategyName = (strategyId) => {
+  const strategyNames = {
+    'technical_analysis': '技术分析',
+    'fundamental_analysis': '基本面分析',
+    'momentum': '动量策略',
+    'value': '价值投资',
+    'growth': '成长投资',
+    'bollinger_reversal': '布林反转',
+    'mean_reversion': '均值回归',
+    'breakout': '突破策略'
+  }
+  return strategyNames[strategyId] || strategyId
+}
+
+// 获取策略描述
+const getStrategyDescription = (strategyId) => {
+  const strategyDescriptions = {
+    'technical_analysis': '通过分析股票的技术指标、图表形态和价格走势来选股，重点关注K线形态、均线系统、成交量等技术指标。',
+    'fundamental_analysis': '基于公司的财务状况、行业前景、管理层能力等基本面因素进行选股，寻找具有长期投资价值的优质企业。',
+    'momentum': '利用股票价格的动量效应，选择近期表现强势的股票，跟随市场趋势进行投资。',
+    'value': '寻找被市场低估的优质股票，通过分析公司的内在价值与市场价格的差异来发现投资机会。',
+    'growth': '重点关注具有高成长潜力的公司，通过分析公司的盈利增长、市场份额扩张等成长性指标来选股。',
+    'bollinger_reversal': '利用布林带指标识别股价的超买超卖状态，在价格触及布林带边界时进行反向操作。',
+    'mean_reversion': '基于均值回归理论，选择偏离均值的股票，预期价格会回归到均值水平。',
+    'breakout': '寻找突破重要阻力位或支撑位的股票，跟随突破方向进行交易。'
+  }
+  return strategyDescriptions[strategyId] || '暂无详细描述'
+}
+
+// 获取交易策略名称
+const getTradingStrategyName = (strategyId) => {
+  const tradingStrategyNames = {
+    'scalping': '剥头皮',
+    'day_trading': '日内交易',
+    'swing_trading': '波段交易',
+    'position_trading': '持仓交易'
+  }
+  return tradingStrategyNames[strategyId] || strategyId
+}
+
+// 获取交易策略描述
+const getTradingStrategyDescription = (strategyId) => {
+  const tradingStrategyDescriptions = {
+    'scalping': '利用极短时间内的价格波动进行频繁交易，追求小幅但稳定的利润，适合高流动性的市场环境。',
+    'day_trading': '在同一个交易日内完成买卖操作，不持仓过夜，通过捕捉日内价格波动来获取利润。',
+    'swing_trading': '持有股票数天到数周，利用中期的价格波动来获取利润，适合有一定趋势性的市场。',
+    'position_trading': '长期持有股票，基于基本面分析进行投资决策，适合价值投资和成长投资策略。'
+  }
+  return tradingStrategyDescriptions[strategyId] || '暂无详细描述'
 }
 
 const handleSearch = () => {
@@ -288,7 +371,7 @@ const viewPlan = (plan) => {
   showDetailDialog.value = true
 }
 
-const handleAction = (data) => {
+const handleAction = async (data) => {
   const { value, row } = data
   switch (value) {
     case 'view':
@@ -314,8 +397,12 @@ const handleAction = (data) => {
       MessagePlugin.success('计划已取消')
       break
     case 'delete':
-      tradingPlanStore.deletePlan(row.id)
-      MessagePlugin.success('计划已删除')
+      try {
+        await tradingPlanStore.deletePlan(row.id)
+        MessagePlugin.success('计划已删除')
+      } catch (error) {
+        MessagePlugin.error('删除计划失败: ' + error.message)
+      }
       break
   }
 }
@@ -368,5 +455,79 @@ onMounted(() => {
 .price-text {
   font-weight: 500;
   color: var(--td-text-color-primary);
+}
+
+/* 详情弹窗样式 */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  background: var(--td-bg-color-container-hover);
+  border-radius: 4px;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: var(--td-text-color-secondary);
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.detail-content {
+  color: var(--td-text-color-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 策略说明部分样式 */
+.strategy-section {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--td-bg-color-container);
+  border-radius: 8px;
+  border: 1px solid var(--td-border-level-1-color);
+}
+
+.strategy-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--td-text-color-primary);
+  border-bottom: 2px solid var(--td-brand-color);
+  padding-bottom: 8px;
+}
+
+.strategy-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.strategy-item {
+  padding: 12px;
+  background: var(--td-bg-color-container-hover);
+  border-radius: 6px;
+  border-left: 3px solid var(--td-brand-color);
+}
+
+.strategy-item h5 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--td-text-color-primary);
+}
+
+.strategy-item p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--td-text-color-secondary);
 }
 </style>

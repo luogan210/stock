@@ -1,8 +1,7 @@
 package middleware
 
 import (
-	"go-demo/config"
-	"go-demo/model"
+	"server/config"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -44,16 +43,16 @@ func AuthMiddleware() gin.HandlerFunc {
 }
 
 // validateToken 验证token并返回用户信息
-func validateToken(token string) *model.UserInfo {
+func validateToken(token string) any {
 	// 这里应该从数据库或缓存中验证token
 	// 暂时使用简单的验证逻辑
 	if token == "mock_token_123456" {
-		return &model.UserInfo{
-			ID:       1,
-			Username: "admin",
-			Email:    "admin@example.com",
-			Nickname: "管理员",
-			Status:   1,
+		return map[string]any{
+			"id":       1,
+			"username": "admin",
+			"email":    "admin@example.com",
+			"nickname": "管理员",
+			"status":   1,
 		}
 	}
 
@@ -61,15 +60,10 @@ func validateToken(token string) *model.UserInfo {
 }
 
 // GetCurrentUser 从Context中获取当前用户信息
-func GetCurrentUser(c *gin.Context) *model.UserInfo {
+func GetCurrentUser(c *gin.Context) any {
 	user, exists := c.Get(UserContextKey)
 	if !exists {
 		return nil
 	}
-
-	if userInfo, ok := user.(*model.UserInfo); ok {
-		return userInfo
-	}
-
-	return nil
+	return user
 }

@@ -8,32 +8,27 @@ import { request } from '@/services/apiService'
 export const tradingReviewApi = {
   // 获取复盘列表
   getReviews: (params = {}) => {
-    return request.get('/trading-review', params)
+    return request.get('/reviews/getList', params)
   },
 
   // 获取复盘详情
   getReview: (id) => {
-    return request.get(`/trading-review/${id}`)
+    return request.get(`/reviews/getDetail/${id}`)
   },
 
   // 创建复盘
   createReview: (data) => {
-    return request.post('/trading-review', data)
+    return request.post('/reviews/create', data)
   },
 
   // 更新复盘
   updateReview: (id, data) => {
-    return request.put(`/trading-review/${id}`, data)
+    return request.put(`/reviews/update/${id}`, data)
   },
 
   // 删除复盘
   deleteReview: (id) => {
-    return request.delete(`/trading-review/${id}`)
-  },
-
-  // 获取复盘统计
-  getReviewStats: () => {
-    return request.get('/trading-review/stats')
+    return request.delete(`/reviews/delete/${id}`)
   }
 }
 

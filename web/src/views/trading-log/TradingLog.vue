@@ -49,7 +49,7 @@
               placeholder="选择更新时间范围"
             />
           </t-form-item>
-          <t-form-item label="操作" name="actions">
+          <t-form-item name="actions" label-width="0">
             <t-space size="small">
               <t-button theme="primary" type="submit">
                 <template #icon>
@@ -227,7 +227,11 @@ const getProfitClass = (profit) => formatProfit(profit).class
 const getActionOptions = (row) => {
   const options = []
   
-  options.push({ content: '删除日志', value: 'delete' })
+  options.push({ 
+    content: '删除日志', 
+    value: 'delete',
+    row: row  // 将row数据包含在选项中
+  })
   return options
 }
 
@@ -277,7 +281,7 @@ const viewLog = (log) => {
   showDetailDialog.value = true
 }
 
-const handleAction = (data) => {
+const handleAction = async (data) => {
   const { value, row } = data
   switch (value) {
     case 'view':
@@ -295,8 +299,12 @@ const handleAction = (data) => {
       MessagePlugin.success('日志状态已更新为失败')
       break
     case 'delete':
-      tradingLogStore.deleteLog(row.id)
-      MessagePlugin.success('日志已删除')
+      try {
+        await tradingLogStore.deleteLog(row.id)
+        MessagePlugin.success('日志已删除')
+      } catch (error) {
+        MessagePlugin.error('删除日志失败: ' + error.message)
+      }
       break
   }
 }
