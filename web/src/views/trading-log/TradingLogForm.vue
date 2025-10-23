@@ -226,6 +226,15 @@ const validate = () => {
   return formRef.value.validate()
 }
 
+// 组件挂载时加载股票数据
+onMounted(async () => {
+  try {
+    await stockStore.loadStocks()
+  } catch (error) {
+    console.error('加载股票数据失败:', error)
+  }
+})
+
 defineExpose({
   getFormData,
   setFormData,
