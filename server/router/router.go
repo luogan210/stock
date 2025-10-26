@@ -2,14 +2,16 @@ package router
 
 import (
 	"server/config"
+	"server/db"
 	"server/handler"
+	"server/modules"
 	"server/storage"
 
 	"github.com/gin-gonic/gin"
 )
 
 // SetupRouter 设置路由
-func SetupRouter(db *storage.DB) *gin.Engine {
+func SetupRouter(dbConn *storage.DB) *gin.Engine {
 	cfg := config.Load()
 
 	// Set gin mode based on env
@@ -32,15 +34,23 @@ func SetupRouter(db *storage.DB) *gin.Engine {
 	// 开发阶段可选择关闭强制鉴权
 	// api.Use(middleware.AuthMiddleware())
 	// inject db into context
-	api.Use(func(c *gin.Context) {
-		if db != nil {
-			c.Set("db", db.SQL)
-		}
-		c.Next()
-	})
+	// api.Use(func(c *gin.Context) {
+	// 	if dbConn != nil {
+	// 		c.Set("db", dbConn.SQL)
+	// 	}
+	// 	c.Next()
+	// })
 	{
-		// 注册API路由
-		handler.RegisterRoutes(api)
+		// 初始化全局数据库
+		if err := db.Init(dbConn); err != nil {
+			panic("数据库初始化失败: " + err.Error())
+		}
+
+		// 注册所有模块路由
+		modules.RegisterAllRoutes(api)
+
+		// 注册其他路由（如上传等）
+		handler.RegisterUploadRoutes(api)
 	}
 
 	return r

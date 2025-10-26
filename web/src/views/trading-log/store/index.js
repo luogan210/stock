@@ -22,18 +22,31 @@ export const useTradingLogStore = defineStore('tradingLog', {
       this.isLoading = loading
     },
     
-    async loadLogs() {
+    async loadLogs(params = {}) {
       this.setLoading(true)
       try {
         // 使用当前环境的 API
-        const response = await currentApi.tradingLog.getLogs()
+        const response = await currentApi.tradingLog.getLogs(params)
         if (response.code === 0) {
           this.logs = response.data.list || []
+          // 返回分页信息
+          return {
+            list: response.data.list || [],
+            total: response.data.total || 0,
+            page: response.data.page || 1,
+            pageSize: response.data.pageSize || 10
+          }
         }
       } catch (error) {
         console.error('加载交易日志失败:', error)
         // 降级到本地存储
         this.loadFromLocalStorage()
+        return {
+          list: this.logs,
+          total: this.logs.length,
+          page: 1,
+          pageSize: 10
+        }
       } finally {
         this.setLoading(false)
       }

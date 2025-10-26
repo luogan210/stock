@@ -6,7 +6,6 @@
       :rules="formRules"
       label-width="120px"
       scroll-to-first-error="smooth"
-      @submit="onFormSubmit"
     >
       <t-form-item label="股票代码" name="code">
         <t-input 
@@ -111,16 +110,6 @@ const handleCodeBlur = () => {
   if (formData.code && !formData.name) {
     // 这里可以添加自动获取股票名称的逻辑
     console.log('股票代码:', formData.code)
-  }
-}
-
-const onFormSubmit = ({ validateResult, firstError, e }) => {
-  e?.preventDefault?.()
-  if (validateResult === true) {
-    // 触发 submit 事件，让 Service 组件处理
-    emit('submit')
-  } else {
-    MessagePlugin.warning(firstError)
   }
 }
 

@@ -214,9 +214,7 @@ const pagination = reactive({
 
 // 计算属性
 const filteredLogs = computed(() => {
-  const logs = filterData(tradingLogStore.getLogs, searchForm)
-  pagination.total = logs.length
-  return logs
+  return tradingLogStore.getLogs || []
 })
 
 // 方法
@@ -256,20 +254,20 @@ const goToCreateLog = () => {
   router.push('/trading-log/create')
 }
 
-const handleSearch = () => {
-  // 搜索逻辑已在计算属性中处理
-}
 
 const resetFilter = () => {
   searchForm.keyword = ''
   searchForm.type = ''
   searchForm.status = ''
   searchForm.dateRange = []
+  pagination.current = 1 // 重置到第一页
+  loadLogs() // 重新加载数据
 }
 
 const handlePageChange = (pageInfo) => {
   pagination.current = pageInfo.current
   pagination.pageSize = pageInfo.pageSize
+  loadLogs()
 }
 
 const editLog = (log) => {
@@ -321,8 +319,36 @@ const exportLogs = () => {
   MessagePlugin.success('日志已导出')
 }
 
+// 加载日志数据
+const loadLogs = async () => {
+  const params = {
+    keyword: searchForm.keyword,
+    type: searchForm.type,
+    status: searchForm.status,
+    startDate: searchForm.dateRange?.[0] || '',
+    endDate: searchForm.dateRange?.[1] || '',
+    page: pagination.current,
+    pageSize: pagination.pageSize
+  }
+  
+  try {
+    const result = await tradingLogStore.loadLogs(params)
+    if (result && result.total !== undefined) {
+      pagination.total = result.total
+    }
+  } catch (error) {
+    console.error('加载交易日志失败:', error)
+  }
+}
+
+// 搜索处理
+const handleSearch = () => {
+  pagination.current = 1 // 重置到第一页
+  loadLogs()
+}
+
 onMounted(() => {
-  tradingLogStore.loadLogs()
+  loadLogs()
 })
 </script>
 

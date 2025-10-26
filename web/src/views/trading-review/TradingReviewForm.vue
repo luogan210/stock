@@ -6,7 +6,6 @@
       :rules="formRules"
       label-width="120px"
       scroll-to-first-error="smooth"
-      @submit="onFormSubmit"
     >
       <t-form-item label="复盘周期" name="period">
         <t-radio-group v-model="formData.period" @change="handlePeriodChange">
@@ -198,16 +197,6 @@ const generateTitle = () => {
   }
 }
 
-const onFormSubmit = ({ validateResult, firstError, e }) => {
-  e?.preventDefault?.()
-  if (validateResult === true) {
-    // 触发 submit 事件，让 Service 组件处理
-    emit('submit')
-  } else {
-    MessagePlugin.warning(firstError)
-  }
-}
-
 // 暴露方法给 Service 组件
 const getFormData = () => {
   return { ...formData }
@@ -250,7 +239,6 @@ defineExpose({
 
 .trade-stat-item {
   display: flex;
-  flex-direction: column;
   gap: 8px;
   flex: 1;
 }

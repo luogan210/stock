@@ -132,7 +132,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
-import { useStockStore } from './store'
+import { useStockStore } from "./store/index.js";
 
 const router = useRouter()
 const stockStore = useStockStore()
@@ -166,19 +166,19 @@ const columns = [
 // 计算属性
 const filteredStocks = computed(() => {
   let stocks = (stockStore.getStocks || []).filter(stock => stock.enabled)
-  
+
   if (searchForm.keyword) {
     const keyword = searchForm.keyword.toLowerCase()
-    stocks = stocks.filter(stock => 
+    stocks = stocks.filter(stock =>
       stock.code.toLowerCase().includes(keyword) ||
       stock.name.toLowerCase().includes(keyword)
     )
   }
-  
+
   if (searchForm.region) {
     stocks = stocks.filter(stock => stock.region === searchForm.region)
   }
-  
+
   pagination.total = stocks.length
   const start = (pagination.current - 1) * pagination.pageSize
   const end = start + pagination.pageSize
@@ -333,8 +333,8 @@ onMounted(() => {
 
 .search-section {
   margin-bottom: 20px;
-  padding: 16px;
-  background: #f8f9fa;
+  /* padding: 16px; */
+  /* background: #f8f9fa; */
   border-radius: 6px;
 }
 

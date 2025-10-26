@@ -5,8 +5,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	_ "modernc.org/sqlite"
+)
+
+var (
+	// globalDB 全局数据库实例
+	globalDB *DB
+	// once 确保只初始化一次
+	once sync.Once
+	// initError 初始化错误
+	initError error
 )
 
 type DB struct {
@@ -15,18 +25,24 @@ type DB struct {
 
 // OpenSQLite opens (and creates if missing) a SQLite database at the given path.
 func OpenSQLite(path string) (*DB, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return nil, fmt.Errorf("mkdir data dir: %w", err)
-	}
-	dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)", path)
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("open sqlite: %w", err)
-	}
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("ping sqlite: %w", err)
-	}
-	return &DB{SQL: db}, nil
+	once.Do(func() {
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			initError = fmt.Errorf("mkdir data dir: %w", err)
+			return
+		}
+		dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)", path)
+		db, err := sql.Open("sqlite", dsn)
+		if err != nil {
+			initError = fmt.Errorf("open sqlite: %w", err)
+			return
+		}
+		if err := db.Ping(); err != nil {
+			initError = fmt.Errorf("ping sqlite: %w", err)
+			return
+		}
+		globalDB = &DB{SQL: db}
+	})
+	return globalDB, initError
 }
 
 // Migrate applies minimal schema needed for the app.
@@ -102,3 +118,26 @@ func (d *DB) Migrate() error {
 }
 
 func (d *DB) Close() error { return d.SQL.Close() }
+
+// Exec 执行SQL语句
+func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return d.SQL.Exec(query, args...)
+}
+
+// QueryRow 执行查询单行
+func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
+	return d.SQL.QueryRow(query, args...)
+}
+
+// Query 执行查询多行
+func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	return d.SQL.Query(query, args...)
+}
+
+// GetDB 获取全局数据库实例
+func GetDB() *DB {
+	if globalDB == nil {
+		panic("数据库未初始化，请先调用 storage.OpenSQLite()")
+	}
+	return globalDB
+}

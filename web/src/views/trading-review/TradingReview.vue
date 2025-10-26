@@ -150,12 +150,12 @@
     >
       <div v-if="selectedReview" class="review-detail">
         <t-descriptions :data="getReviewDetailData(selectedReview)" />
-        
+
         <div class="review-content">
           <h4>复盘内容</h4>
           <p>{{ selectedReview.content }}</p>
         </div>
-        
+
         <div class="review-lessons">
           <h4>经验教训</h4>
           <ul>
@@ -164,7 +164,7 @@
             </li>
           </ul>
         </div>
-        
+
         <div class="review-improvements">
           <h4>改进计划</h4>
           <ul>
@@ -173,7 +173,7 @@
             </li>
           </ul>
         </div>
-        
+
         <div class="review-plan">
           <h4>{{ getNextPlanLabel(selectedReview.period) }}</h4>
           <p>{{ selectedReview.nextPlan }}</p>
@@ -188,7 +188,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTradingReviewStore } from './store'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
-import { filterData, formatProfit } from '@/utils/helpers'
+import { filterData, formatProfit } from "@/utils/helpers"
 
 const router = useRouter()
 const tradingReviewStore = useTradingReviewStore()
@@ -228,7 +228,7 @@ const isLoading = computed(() => tradingReviewStore.isLoading)
 
 // 筛选后的复盘列表
 const filteredReviews = computed(() => {
-  return filterData(reviews.value, searchForm)
+  return reviews.value || []
 })
 
 // 获取周期主题色
@@ -320,7 +320,7 @@ const loadReviews = async () => {
       pageSize: pagination.pageSize,
       ...searchForm
     }
-    
+
     const result = await tradingReviewStore.loadReviews(params)
     pagination.total = result.total
   } catch (error) {
@@ -377,8 +377,8 @@ onMounted(() => {
 
 .search-section {
   margin-bottom: 20px;
-  padding: 16px;
-  background: #f8f9fa;
+  /* padding: 16px; */
+  /* background: #f8f9fa; */
   border-radius: 6px;
 }
 

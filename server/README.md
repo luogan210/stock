@@ -17,7 +17,7 @@ server/
 ├── handler/
 │   ├── upload.go       # 文件上传接口
 │   ├── stock.go        # 股票接口（GET/POST）
-│   ├── routes.go       # 注册路由（仅上传与股票）
+│   ├── routes.go       # 注册路由（仅上传与股票）  
 │   ├── response.go
 │   └── base.go
 ├── middleware/

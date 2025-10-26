@@ -99,17 +99,17 @@ export const useStockStore = defineStore('stock', () => {
     currentStock.value = null
     loading.value = false
   }
-
+  loadStocks()
   return {
     // 状态
     stocks,
     loading,
     currentStock,
-    
+
     // 计算属性
     getStocks,
     isLoading,
-    
+
     // 方法
     loadStocks,
     addStock,

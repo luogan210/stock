@@ -21,18 +21,31 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
       this.isLoading = loading
     },
     
-    async loadPlans() {
+    async loadPlans(params = {}) {
       this.setLoading(true)
       try {
         // 使用当前环境的 API
-        const response = await currentApi.tradingPlan.getPlans()
+        const response = await currentApi.tradingPlan.getPlans(params)
         if (response.code === 0) {
           this.plans = response.data.list || []
+          // 返回分页信息
+          return {
+            list: response.data.list || [],
+            total: response.data.total || 0,
+            page: response.data.page || 1,
+            pageSize: response.data.pageSize || 10
+          }
         }
       } catch (error) {
         console.error('加载交易计划失败:', error)
         // 降级到本地存储
         this.loadFromLocalStorage()
+        return {
+          list: this.plans,
+          total: this.plans.length,
+          page: 1,
+          pageSize: 10
+        }
       } finally {
         this.setLoading(false)
       }

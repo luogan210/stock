@@ -6,32 +6,31 @@
       :rules="formRules"
       label-width="120px"
       scroll-to-first-error="smooth"
-      @submit="onFormSubmit"
     >
       <t-form-item label="选择股票" name="stockCode">
-        <t-select 
-          class="form-input-md" 
-          v-model="formData.stockCode" 
+        <t-select
+          class="form-input-md"
+          v-model="formData.stockCode"
           placeholder="请选择股票"
           @change="handleStockChange"
         >
-          <t-option 
-            v-for="stock in availableStocks" 
-            :key="stock.code" 
-            :value="stock.code" 
-            :label="`${stock.name} (${stock.code}) - ${getMarketText(stock.marketType)}`" 
+          <t-option
+            v-for="stock in availableStocks"
+            :key="stock.code"
+            :value="stock.code"
+            :label="`${stock.name} (${stock.code}) - ${getMarketText(stock.marketType)}`"
           />
         </t-select>
       </t-form-item>
-      
+
       <t-form-item label="选股策略" name="strategy">
         <div class="strategy-field">
-          <t-select class="form-input-md" v-model="formData.strategy" placeholder="请选择选股策略" @change="generatePlanName">
-            <t-option 
-              v-for="strategy in availableStrategies" 
-              :key="strategy.id" 
-              :value="strategy.id" 
-              :label="`${strategy.name} - ${strategy.description}`" 
+          <t-select class="form-input-md" v-model="formData.strategy" placeholder="请选择选股策略" @change="handleStrategyChange">
+            <t-option
+              v-for="strategy in availableStrategies"
+              :key="strategy.id"
+              :value="strategy.id"
+              :label="`${strategy.name} - ${strategy.description}`"
             />
           </t-select>
           <t-popup
@@ -42,7 +41,7 @@
             :destroy-on-close="false"
             :z-index="9999"
             :show-arrow="true"
-          > 
+          >
             <t-button
               variant="text"
               shape="circle"
@@ -71,90 +70,143 @@
           </t-popup>
         </div>
       </t-form-item>
-      
+
       <t-form-item label="计划名称" name="name">
-        <t-input 
-          class="form-input-md" 
-          v-model="formData.name" 
+        <t-input
+          class="form-input-md"
+          v-model="formData.name"
           placeholder="请输入计划名称"
         />
       </t-form-item>
-      
+
       <t-form-item label="交易方向" name="type">
         <t-radio-group v-model="formData.type" @change="generatePlanName">
           <t-radio value="buy">买多</t-radio>
           <t-radio value="sell">买空</t-radio>
         </t-radio-group>
       </t-form-item>
-      
+
       <t-form-item label="交易策略" name="tradingStrategy">
-        <t-select class="form-input-md" v-model="formData.tradingStrategy" placeholder="请选择交易策略">
-          <t-option 
-            v-for="strategy in availableTradingStrategies" 
-            :key="strategy.id" 
-            :value="strategy.id" 
-            :label="`${strategy.name} - ${strategy.description}`" 
+        <t-select class="form-input-md" v-model="formData.tradingStrategy" placeholder="请选择交易策略" @change="updateRiskLevel">
+          <t-option
+            v-for="strategy in availableTradingStrategies"
+            :key="strategy.id"
+            :value="strategy.id"
+            :label="`${strategy.name} - ${strategy.description}`"
           />
         </t-select>
       </t-form-item>
+
+      <!-- 风险等级显示 -->
+      <t-form-item label="风险等级">
+        <div class="risk-level-display">
+          <t-tag 
+            :color="riskInfo.color" 
+            variant="light-outline"
+            size="medium"
+          >
+            {{ riskInfo.text }}
+          </t-tag>
+          <span class="risk-score">评分: {{ riskInfo.score }}/3</span>
+          <t-popup
+            placement="right"
+            trigger="hover"
+            :overlay-style="{ padding: '12px', maxWidth: '400px' }"
+          >
+            <t-button variant="text" size="small">
+              <t-icon name="help-circle" />
+            </t-button>
+            <template #content>
+              <div class="risk-details">
+                <h4>风险分析详情</h4>
+                <p><strong>选股策略风险:</strong> {{ getRiskLevelText(riskInfo.details?.strategyRisk) }}</p>
+                <p><strong>交易策略风险:</strong> {{ getRiskLevelText(riskInfo.details?.tradingStrategyRisk) }}</p>
+                <p><strong>综合评分:</strong> {{ riskInfo.details?.combinedScore }}/3</p>
+                <p><strong>风险说明:</strong> {{ riskInfo.details?.explanation }}</p>
+                <div class="risk-suggestions" v-if="riskSuggestions">
+                  <h5>投资建议</h5>
+                  <ul>
+                    <li>{{ riskSuggestions.positionSize }}</li>
+                    <li>{{ riskSuggestions.stopLoss }}</li>
+                    <li>{{ riskSuggestions.takeProfit }}</li>
+                    <li>{{ riskSuggestions.timeframe }}</li>
+                  </ul>
+                  <h5>注意事项</h5>
+                  <ul>
+                    <li v-for="tip in riskSuggestions.tips" :key="tip">{{ tip }}</li>
+                  </ul>
+                </div>
+              </div>
+            </template>
+          </t-popup>
+        </div>
+      </t-form-item>
       <FlexRow>
         <t-form-item label="计划买进价格" name="targetPrice">
-        <t-input-number 
-          class="form-input-md" 
-          v-model="formData.targetPrice" 
+        <t-input-number
+          class="form-input-md"
+          v-model="formData.targetPrice"
           placeholder="请输入目标价格"
           :min="0"
           :precision="2"
+          @change="validateRiskParameters"
         />
       </t-form-item>
-      
+
       <t-form-item label="计划数量" name="quantity">
-        <t-input-number 
-          class="form-input-md" 
-          v-model="formData.quantity" 
+        <t-input-number
+          class="form-input-md"
+          v-model="formData.quantity"
           placeholder="请输入数量"
           :min="1"
         />
       </t-form-item>
       </FlexRow>
-      
+
       <FlexRow>
         <t-form-item label="止损价格" name="stopLoss">
-        <t-input-number 
-          class="form-input-md" 
-          v-model="formData.stopLoss" 
+        <t-input-number
+          class="form-input-md"
+          v-model="formData.stopLoss"
           placeholder="请输入止损价格"
           :min="0"
           :precision="2"
+          @change="validateRiskParameters"
         />
       </t-form-item>
-      
+
       <t-form-item label="止盈价格" name="takeProfit">
-        <t-input-number 
-          class="form-input-md" 
-          v-model="formData.takeProfit" 
+        <t-input-number
+          class="form-input-md"
+          v-model="formData.takeProfit"
           placeholder="请输入止盈价格"
           :min="0"
           :precision="2"
+          @change="validateRiskParameters"
         />
       </t-form-item>
       </FlexRow>
-      
-      
+
+      <!-- 风险参数验证提示 -->
+      <t-form-item v-if="riskValidation.warnings && riskValidation.warnings.length > 0">
+        <t-alert theme="warning" :message="`风险提示: ${riskValidation.warnings.join('; ')}`" />
+      </t-form-item>
+
+
       <t-form-item label="计划原因描述" name="description">
-        <t-textarea 
-          class="form-input-lg" 
-          v-model="formData.description" 
+        <t-textarea
+          class="form-input-lg"
+          v-model="formData.description"
           placeholder="请描述选择该股票的原因和计划依据"
           :maxlength="500"
           :autosize="{ minRows: 3, maxRows: 6 }"
         />
       </t-form-item>
-      
+
       <t-form-item label="备注" name="remark">
-        <t-textarea 
-          class="form-input-lg" 
-          v-model="formData.remark" 
+        <t-textarea
+          class="form-input-lg"
+          v-model="formData.remark"
           placeholder="其他备注信息"
           :maxlength="200"
           :autosize="{ minRows: 2, maxRows: 4 }"
@@ -165,17 +217,23 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { 
-  getEnabledStrategies, 
+import {
+  getEnabledStrategies,
   getStrategyById
 } from '@/utils/strategyConfig'
-import { 
+import {
   getEnabledTradingStrategies
 } from '@/utils/tradingStrategyConfig'
-import { useStockStore } from '@/stores/stock'
+import {useStockStore} from "@/stores/index.js";
 import { getMarketText } from '@/utils/stockConfig'
+import { 
+  calculateRiskLevel, 
+  getRiskSuggestions, 
+  validateRiskParameters as validateRisk,
+  RISK_LEVEL_TEXT 
+} from '@/utils/riskCalculator'
 
 const props = defineProps({
   isEditMode: {
@@ -204,7 +262,8 @@ const stockStore = useStockStore()
 
 // 获取可用股票
 const availableStocks = computed(() => {
-  return stockStore.getStockList.filter(stock => stock.enabled)
+  const stocks = stockStore.stocks
+  return stocks ? stocks.filter(stock => stock.enabled) : []
 })
 
 // 表单数据
@@ -224,6 +283,26 @@ const formData = reactive({
   remark: '',
   strategy: '',
   tradingStrategy: ''
+})
+
+// 风险信息
+const riskInfo = ref({
+  level: null,
+  text: '',
+  color: '',
+  score: 0,
+  details: null
+})
+
+// 风险建议
+const riskSuggestions = computed(() => {
+  return riskInfo.value.level ? getRiskSuggestions(riskInfo.value.level) : null
+})
+
+// 风险参数验证
+const riskValidation = ref({
+  valid: true,
+  warnings: []
 })
 
 // 表单验证规则
@@ -255,7 +334,7 @@ const formRules = {
 }
 
 const handleStockChange = (value) => {
-  const selectedStock = stockStore.getStockByCode(value)
+  const selectedStock = availableStocks.value.find(v=>v.code===value)
   if (selectedStock) {
     formData.stockName = selectedStock.name
     generatePlanName()
@@ -266,54 +345,118 @@ const handleStockChange = (value) => {
 
 const generatePlanName = () => {
   if (formData.stockName && formData.strategy && formData.type) {
-    const strategyNames = {
-      'technical_analysis': '技术分析',
-      'fundamental_analysis': '基本面分析',
-      'momentum': '动量策略',
-      'value': '价值投资',
-      'growth': '成长投资',
-      'bollinger_reversal': '布林反转',
-      'mean_reversion': '均值回归',
-      'breakout': '突破策略'
-    }
-    
     const typeText = formData.type === 'buy' ? '买多' : '买空'
-    const strategyText = strategyNames[formData.strategy] || formData.strategy
-    
+    const strategyText = availableStrategies.value.find(v=>v.id===formData.strategy)?.name || formData.strategy
+
     formData.name = `${formData.stockName} ${strategyText} ${typeText}计划`
   }
 }
 
-const onFormSubmit = ({ validateResult, firstError, e }) => {
-  e?.preventDefault?.()
-  if (validateResult === true) {
-    // 触发 submit 事件，让 Service 组件处理
-    emit('submit')
+// 处理选股策略变化
+const handleStrategyChange = (value) => {
+  generatePlanName()
+  updateRiskLevel()
+}
+
+// 更新风险等级
+const updateRiskLevel = () => {
+  if (formData.strategy && formData.tradingStrategy) {
+    const risk = calculateRiskLevel(formData.strategy, formData.tradingStrategy)
+    riskInfo.value = risk
+    formData.riskLevel = risk.level
+    
+    // 验证当前价格参数
+    validateRiskParameters()
   } else {
-    MessagePlugin.warning(firstError)
+    riskInfo.value = {
+      level: null,
+      text: '',
+      color: '',
+      score: 0,
+      details: null
+    }
   }
+}
+
+// 验证风险参数
+const validateRiskParameters = () => {
+  if (formData.targetPrice && formData.stopLoss && formData.takeProfit && riskInfo.value.level) {
+    const validation = validateRisk(
+      formData.targetPrice,
+      formData.stopLoss,
+      formData.takeProfit,
+      riskInfo.value.level
+    )
+    riskValidation.value = validation
+  } else {
+    riskValidation.value = {
+      valid: true,
+      warnings: []
+    }
+  }
+}
+
+// 获取风险等级文本
+const getRiskLevelText = (riskLevel) => {
+  return RISK_LEVEL_TEXT[riskLevel] || '未知'
 }
 
 // 暴露方法给 Service 组件
 const getFormData = () => {
-  return { ...formData }
+  // 确保风险等级被包含在表单数据中
+  const data = { ...formData }
+  
+  // 如果有计算出的风险等级，使用计算结果
+  if (riskInfo.value.level) {
+    data.riskLevel = riskInfo.value.level
+  }
+  
+  console.log('提交的表单数据:', data)
+  return data
 }
 
 const setFormData = (data) => {
   Object.assign(formData, data)
+  
+  // 如果设置了策略数据，重新计算风险等级
+  if (data.strategy && data.tradingStrategy) {
+    // 使用 nextTick 确保数据已经更新
+    setTimeout(() => {
+      updateRiskLevel()
+    }, 100)
+  } else if (data.riskLevel) {
+    // 如果直接设置了风险等级，显示它
+    const riskLevelTexts = {
+      'low': { level: 'low', text: '低风险', color: '#52c41a' },
+      'medium': { level: 'medium', text: '中风险', color: '#faad14' },
+      'high': { level: 'high', text: '高风险', color: '#ff4d4f' }
+    }
+    const riskData = riskLevelTexts[data.riskLevel]
+    if (riskData) {
+      riskInfo.value = {
+        ...riskData,
+        score: data.riskLevel === 'low' ? 1 : data.riskLevel === 'medium' ? 2 : 3,
+        details: {
+          explanation: '从已保存的计划中加载的风险等级'
+        }
+      }
+    }
+  }
 }
 
 const validate = () => {
   return formRef.value.validate()
 }
 
-// 组件挂载时加载股票数据
-onMounted(async () => {
-  try {
-    await stockStore.loadStocks()
-  } catch (error) {
-    console.error('加载股票数据失败:', error)
-  }
+// 监听策略变化，自动更新风险等级
+watch([() => formData.strategy, () => formData.tradingStrategy], () => {
+  updateRiskLevel()
+}, { immediate: false })
+
+// 组件挂载时不自动加载数据，避免无限递归
+onMounted(() => {
+  // 股票数据由父组件或用户手动触发加载
+  console.log('TradingPlanForm mounted - 股票数据需要手动加载')
 })
 
 defineExpose({
@@ -374,5 +517,63 @@ defineExpose({
 .strategy-popup-content li strong {
   color: var(--td-brand-color);
   font-weight: 600;
+}
+
+/* 风险等级显示样式 */
+.risk-level-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.risk-score {
+  font-size: 12px;
+  color: var(--td-text-color-secondary);
+  font-weight: 500;
+}
+
+.risk-details {
+  max-width: 380px;
+}
+
+.risk-details h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--td-text-color-primary);
+  border-bottom: 1px solid var(--td-brand-color);
+  padding-bottom: 6px;
+}
+
+.risk-details h5 {
+  margin: 12px 0 6px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--td-brand-color);
+}
+
+.risk-details p {
+  margin: 6px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--td-text-color-primary);
+}
+
+.risk-details ul {
+  margin: 6px 0;
+  padding-left: 16px;
+}
+
+.risk-details li {
+  margin-bottom: 4px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--td-text-color-secondary);
+}
+
+.risk-suggestions {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--td-border-level-1-color);
 }
 </style>

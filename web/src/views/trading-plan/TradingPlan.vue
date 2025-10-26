@@ -111,6 +111,16 @@
               <span class="price-text">{{ row.stopLoss ? `¥${row.stopLoss}` : '-' }}</span>
             </template>
             
+            <template #riskLevel="{ row }">
+              <t-tag
+                :color="getRiskLevelColor(row.riskLevel)"
+                variant="light-outline"
+                size="small"
+              >
+                {{ getRiskLevelText(row.riskLevel) }}
+              </t-tag>
+            </template>
+            
             <template #operation="{ row }">
               <t-button
                 size="small"
@@ -157,7 +167,16 @@
         <div class="detail-grid">
           <div v-for="item in getPlanDetailData(selectedPlan)" :key="item.label" class="detail-item">
             <span class="detail-label">{{ item.label }}:</span>
-            <span class="detail-content">{{ item.content }}</span>
+            <span class="detail-content" v-if="!item.isRiskLevel">{{ item.content }}</span>
+            <t-tag
+              v-else-if="item.isRiskLevel && item.content !== '未设置'"
+              :color="getRiskLevelColor(selectedPlan.riskLevel)"
+              variant="light-outline"
+              size="small"
+            >
+              {{ getRiskLevelText(selectedPlan.riskLevel) }}
+            </t-tag>
+            <span v-else class="detail-content">{{ item.content }}</span>
           </div>
         </div>
         
@@ -227,6 +246,7 @@ const columns = [
   { colKey: 'targetPrice', title: '计划买进价格', width: 100 },
   { colKey: 'stopLoss', title: '止损价格', width: 100 },
   { colKey: 'quantity', title: '数量', width: 80 },
+  { colKey: 'riskLevel', title: '风险等级', width: 100 },
   { colKey: 'status', title: '状态', width: 100 },
   { colKey: 'createdAt', title: '创建时间', width: 150 },
   { colKey: 'operation', title: '操作', width: 150 }
@@ -240,9 +260,7 @@ const pagination = reactive({
 
 // 计算属性
 const filteredPlans = computed(() => {
-  const plans = filterData(tradingPlanStore.getPlans, searchForm)
-  pagination.total = plans.length
-  return plans
+  return tradingPlanStore.getPlans || []
 })
 
 // 方法
@@ -281,7 +299,7 @@ const getPlanDetailData = (plan) => {
     { label: '止盈价格', content: plan.takeProfit ? `¥${plan.takeProfit}` : '未设置' },
     { label: '选股策略', content: plan.strategy || '未设置' },
     { label: '交易策略', content: plan.tradingStrategy || '未设置' },
-    { label: '风险等级', content: plan.riskLevel || '未设置' },
+    { label: '风险等级', content: plan.riskLevel || '未设置', isRiskLevel: true },
     { label: '策略说明', content: plan.description || '无' },
     { label: '当前状态', content: getStatusText(plan.status) },
     { label: '创建时间', content: plan.createdAt },
@@ -307,6 +325,26 @@ const getStrategyName = (strategyId) => {
     'breakout': '突破策略'
   }
   return strategyNames[strategyId] || strategyId
+}
+
+// 获取风险等级文本
+const getRiskLevelText = (riskLevel) => {
+  const texts = {
+    'low': '低风险',
+    'medium': '中风险',
+    'high': '高风险'
+  }
+  return texts[riskLevel] || '未知'
+}
+
+// 获取风险等级颜色
+const getRiskLevelColor = (riskLevel) => {
+  const colors = {
+    'low': '#52c41a',    // 绿色
+    'medium': '#faad14', // 橙色
+    'high': '#ff4d4f'    // 红色
+  }
+  return colors[riskLevel] || '#d9d9d9'
 }
 
 // 获取策略描述
@@ -346,20 +384,20 @@ const getTradingStrategyDescription = (strategyId) => {
   return tradingStrategyDescriptions[strategyId] || '暂无详细描述'
 }
 
-const handleSearch = () => {
-  // 搜索逻辑已在计算属性中处理
-}
 
 const resetFilter = () => {
   searchForm.keyword = ''
   searchForm.status = ''
   searchForm.type = ''
   searchForm.dateRange = []
+  pagination.current = 1 // 重置到第一页
+  loadPlans() // 重新加载数据
 }
 
 const handlePageChange = (pageInfo) => {
   pagination.current = pageInfo.current
   pagination.pageSize = pageInfo.pageSize
+  loadPlans()
 }
 
 const editPlan = (plan) => {
@@ -408,8 +446,36 @@ const handleAction = async (data) => {
 }
 
 
+// 加载计划数据
+const loadPlans = async () => {
+  const params = {
+    keyword: searchForm.keyword,
+    status: searchForm.status,
+    type: searchForm.type,
+    startDate: searchForm.dateRange?.[0] || '',
+    endDate: searchForm.dateRange?.[1] || '',
+    page: pagination.current,
+    pageSize: pagination.pageSize
+  }
+  
+  try {
+    const result = await tradingPlanStore.loadPlans(params)
+    if (result && result.total !== undefined) {
+      pagination.total = result.total
+    }
+  } catch (error) {
+    console.error('加载交易计划失败:', error)
+  }
+}
+
+// 搜索处理
+const handleSearch = () => {
+  pagination.current = 1 // 重置到第一页
+  loadPlans()
+}
+
 onMounted(() => {
-  tradingPlanStore.loadPlans()
+  loadPlans()
 })
 </script>
 
