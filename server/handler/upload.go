@@ -3,10 +3,10 @@ package handler
 import (
 	"crypto/md5"
 	"fmt"
-	"go-demo/config"
 	"io"
 	"os"
 	"path/filepath"
+	"server/config"
 	"strconv"
 	"sync"
 	"time"

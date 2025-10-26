@@ -7,7 +7,7 @@
           <span>系统概览</span>
         </div>
       </template>
-      
+
       <div class="welcome-content">
         <t-row :gutter="16">
           <t-col :span="3">
@@ -77,7 +77,7 @@
             </t-card>
           </t-col>
         </t-row>
-        
+
         <div class="quick-actions">
           <h3>快速操作</h3>
           <t-space size="small">
@@ -104,7 +104,7 @@
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useStockStore } from '@/stores/stock'
+import { useStockStore } from '../stock/store'
 import { useHomeStore } from './store'
 import { getDateRange } from '@/utils/helpers'
 import { currentApi } from '@/services/api'
@@ -114,8 +114,14 @@ const userStore = useUserStore()
 const stockStore = useStockStore()
 const homeStore = useHomeStore()
 
-const stockCount = computed(() => stockStore.getStockList.length)
-const watchCount = computed(() => stockStore.getWatchList.length)
+const stockCount = computed(() => {
+  const stocks = stockStore.getStockList
+  return stocks ? stocks.length : 0
+})
+const watchCount = computed(() => {
+  const watches = stockStore.getWatchList
+  return watches ? watches.length : 0
+})
 const planCount = computed(() => homeStore.getHomeStats.planCount)
 const activePlanCount = computed(() => homeStore.getHomeStats.activePlanCount || 0)
 const logCount = computed(() => homeStore.getHomeStats.logCount)
@@ -154,9 +160,6 @@ const goToTradingLog = () => {
 </script>
 
 <style scoped>
-.home {
-}
-
 .welcome-card {
   margin-bottom: 20px;
 }

@@ -36,10 +36,11 @@ export const api = {
 }
 
 // 根据环境自动选择 API
+// 注意：为对接后端，交易计划、交易日志、交易复盘在开发环境也强制使用真实接口
 export const currentApi = isDevelopment ? {
-  tradingPlan: mockTradingPlanApi,
-  tradingLog: mockTradingLogApi,
-  tradingReview: mockTradingReviewApi,
+  tradingPlan: tradingPlanApi,
+  tradingLog: tradingLogApi,
+  tradingReview: tradingReviewApi,
   home: mockHomeApi
 } : {
   tradingPlan: tradingPlanApi,

@@ -54,7 +54,7 @@
               placeholder="选择时间范围"
             />
           </t-form-item>
-          <t-form-item label="操作" name="actions">
+          <t-form-item name="actions" label-width="0">
             <t-space size="small">
               <t-button theme="primary" type="submit">
                 <template #icon>
@@ -90,10 +90,6 @@
           </t-tag>
         </template>
 
-        <!-- 日期范围 -->
-        <template #dateRange="{ row }">
-          <span class="date-range">{{ row.dateRange }}</span>
-        </template>
 
         <!-- 盈亏情况 -->
         <template #profit="{ row }">
@@ -154,12 +150,12 @@
     >
       <div v-if="selectedReview" class="review-detail">
         <t-descriptions :data="getReviewDetailData(selectedReview)" />
-        
+
         <div class="review-content">
           <h4>复盘内容</h4>
           <p>{{ selectedReview.content }}</p>
         </div>
-        
+
         <div class="review-lessons">
           <h4>经验教训</h4>
           <ul>
@@ -168,7 +164,7 @@
             </li>
           </ul>
         </div>
-        
+
         <div class="review-improvements">
           <h4>改进计划</h4>
           <ul>
@@ -177,7 +173,7 @@
             </li>
           </ul>
         </div>
-        
+
         <div class="review-plan">
           <h4>{{ getNextPlanLabel(selectedReview.period) }}</h4>
           <p>{{ selectedReview.nextPlan }}</p>
@@ -192,7 +188,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTradingReviewStore } from './store'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
-import { filterData, formatProfit } from '@/utils/helpers'
+import { filterData, formatProfit } from "@/utils/helpers"
 
 const router = useRouter()
 const tradingReviewStore = useTradingReviewStore()
@@ -221,10 +217,8 @@ const pagination = reactive({
 const columns = [
   { colKey: 'title', title: '复盘标题' },
   { colKey: 'period', title: '复盘周期' },
-  { colKey: 'dateRange', title: '日期范围' },
   { colKey: 'trades', title: '交易统计' },
   { colKey: 'profit', title: '盈亏情况' },
-  { colKey: 'createTime', title: '创建时间' },
   { colKey: 'operation', title: '操作' }
 ]
 
@@ -234,7 +228,7 @@ const isLoading = computed(() => tradingReviewStore.isLoading)
 
 // 筛选后的复盘列表
 const filteredReviews = computed(() => {
-  return filterData(reviews.value, searchForm)
+  return reviews.value || []
 })
 
 // 获取周期主题色
@@ -326,7 +320,7 @@ const loadReviews = async () => {
       pageSize: pagination.pageSize,
       ...searchForm
     }
-    
+
     const result = await tradingReviewStore.loadReviews(params)
     pagination.total = result.total
   } catch (error) {
@@ -383,8 +377,8 @@ onMounted(() => {
 
 .search-section {
   margin-bottom: 20px;
-  padding: 16px;
-  background: #f8f9fa;
+  /* padding: 16px; */
+  /* background: #f8f9fa; */
   border-radius: 6px;
 }
 

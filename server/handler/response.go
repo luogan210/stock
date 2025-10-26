@@ -15,9 +15,10 @@ type Response struct {
 
 // 业务状态码常量
 const (
-	CodeSuccess = 200 // 成功
-	CodeError   = 500 // 错误
-	CodeInvalid = 400 // 参数无效
+	CodeSuccess  = 0   // 成功
+	CodeError    = 500 // 错误
+	CodeInvalid  = 400 // 参数无效
+	CodeNotFound = 404 // 未找到
 )
 
 // Success 成功响应

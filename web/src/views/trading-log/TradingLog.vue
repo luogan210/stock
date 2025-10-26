@@ -49,7 +49,7 @@
               placeholder="选择更新时间范围"
             />
           </t-form-item>
-          <t-form-item label="操作" name="actions">
+          <t-form-item name="actions" label-width="0">
             <t-space size="small">
               <t-button theme="primary" type="submit">
                 <template #icon>
@@ -214,9 +214,7 @@ const pagination = reactive({
 
 // 计算属性
 const filteredLogs = computed(() => {
-  const logs = filterData(tradingLogStore.getLogs, searchForm)
-  pagination.total = logs.length
-  return logs
+  return tradingLogStore.getLogs || []
 })
 
 // 方法
@@ -227,7 +225,11 @@ const getProfitClass = (profit) => formatProfit(profit).class
 const getActionOptions = (row) => {
   const options = []
   
-  options.push({ content: '删除日志', value: 'delete' })
+  options.push({ 
+    content: '删除日志', 
+    value: 'delete',
+    row: row  // 将row数据包含在选项中
+  })
   return options
 }
 
@@ -252,20 +254,20 @@ const goToCreateLog = () => {
   router.push('/trading-log/create')
 }
 
-const handleSearch = () => {
-  // 搜索逻辑已在计算属性中处理
-}
 
 const resetFilter = () => {
   searchForm.keyword = ''
   searchForm.type = ''
   searchForm.status = ''
   searchForm.dateRange = []
+  pagination.current = 1 // 重置到第一页
+  loadLogs() // 重新加载数据
 }
 
 const handlePageChange = (pageInfo) => {
   pagination.current = pageInfo.current
   pagination.pageSize = pageInfo.pageSize
+  loadLogs()
 }
 
 const editLog = (log) => {
@@ -277,7 +279,7 @@ const viewLog = (log) => {
   showDetailDialog.value = true
 }
 
-const handleAction = (data) => {
+const handleAction = async (data) => {
   const { value, row } = data
   switch (value) {
     case 'view':
@@ -295,8 +297,12 @@ const handleAction = (data) => {
       MessagePlugin.success('日志状态已更新为失败')
       break
     case 'delete':
-      tradingLogStore.deleteLog(row.id)
-      MessagePlugin.success('日志已删除')
+      try {
+        await tradingLogStore.deleteLog(row.id)
+        MessagePlugin.success('日志已删除')
+      } catch (error) {
+        MessagePlugin.error('删除日志失败: ' + error.message)
+      }
       break
   }
 }
@@ -313,8 +319,36 @@ const exportLogs = () => {
   MessagePlugin.success('日志已导出')
 }
 
+// 加载日志数据
+const loadLogs = async () => {
+  const params = {
+    keyword: searchForm.keyword,
+    type: searchForm.type,
+    status: searchForm.status,
+    startDate: searchForm.dateRange?.[0] || '',
+    endDate: searchForm.dateRange?.[1] || '',
+    page: pagination.current,
+    pageSize: pagination.pageSize
+  }
+  
+  try {
+    const result = await tradingLogStore.loadLogs(params)
+    if (result && result.total !== undefined) {
+      pagination.total = result.total
+    }
+  } catch (error) {
+    console.error('加载交易日志失败:', error)
+  }
+}
+
+// 搜索处理
+const handleSearch = () => {
+  pagination.current = 1 // 重置到第一页
+  loadLogs()
+}
+
 onMounted(() => {
-  tradingLogStore.loadLogs()
+  loadLogs()
 })
 </script>
 

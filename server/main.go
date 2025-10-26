@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"go-demo/config"
-	"go-demo/router"
 	"net/http"
 	"os"
 	"os/signal"
+	"server/config"
+	"server/router"
+	"server/storage"
 	"syscall"
 	"time"
 )
@@ -16,7 +17,19 @@ func main() {
 	cfg := config.Load()
 	fmt.Printf("Starting server in %s on :%s\n", cfg.Env, cfg.HTTPPort)
 
-	r := router.SetupRouter()
+	// init db
+	db, err := storage.OpenSQLite(cfg.SQLitePath)
+	if err != nil {
+		fmt.Printf("sqlite open failed: %v\n", err)
+		return
+	}
+	if err := db.Migrate(); err != nil {
+		fmt.Printf("sqlite migrate failed: %v\n", err)
+		return
+	}
+	defer db.Close()
+
+	r := router.SetupRouter(db)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.HTTPPort,

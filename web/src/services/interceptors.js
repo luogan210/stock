@@ -1,10 +1,10 @@
-import { Message } from 'tdesign-vue-next';
+import { MessagePlugin } from 'tdesign-vue-next';
 
 let errorLock = false;
 function showError(msg) {
   if (!errorLock) {
     errorLock = true;
-    Message.error(msg);
+    MessagePlugin.error(msg);
     setTimeout(() => {
       errorLock = false;
     }, 1000);

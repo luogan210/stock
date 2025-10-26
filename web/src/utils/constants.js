@@ -14,26 +14,23 @@ export const TRADING_TYPE_TEXT = {
 
 // 交易计划状态
 export const PLAN_STATUS = {
-  ACTIVE: 'active',
-  COMPLETED: 'completed',
-  PAUSED: 'paused',
-  CANCELLED: 'cancelled'
+  PENDING: 'pending',
+  EXECUTING: 'executing',
+  COMPLETED: 'completed'
 }
 
 // 交易计划状态文本映射
 export const PLAN_STATUS_TEXT = {
-  [PLAN_STATUS.ACTIVE]: '进行中',
-  [PLAN_STATUS.COMPLETED]: '已完成',
-  [PLAN_STATUS.PAUSED]: '已暂停',
-  [PLAN_STATUS.CANCELLED]: '已取消'
+  [PLAN_STATUS.PENDING]: '未执行',
+  [PLAN_STATUS.EXECUTING]: '执行中',
+  [PLAN_STATUS.COMPLETED]: '已完成'
 }
 
 // 交易计划状态主题映射
 export const PLAN_STATUS_THEME = {
-  [PLAN_STATUS.ACTIVE]: 'primary',
-  [PLAN_STATUS.COMPLETED]: 'success',
-  [PLAN_STATUS.PAUSED]: 'warning',
-  [PLAN_STATUS.CANCELLED]: 'danger'
+  [PLAN_STATUS.PENDING]: 'default',
+  [PLAN_STATUS.EXECUTING]: 'primary',
+  [PLAN_STATUS.COMPLETED]: 'success'
 }
 
 // 交易日志状态

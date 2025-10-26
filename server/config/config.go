@@ -19,6 +19,9 @@ type AppConfig struct {
 	IdleTimeout  time.Duration
 	TrustProxy   bool
 
+	// Database
+	SQLitePath string
+
 	// Auth
 	JWTSecret        string
 	JWTExpireMinutes int
@@ -58,6 +61,8 @@ func Load() *AppConfig {
 		WriteTimeout: getEnvDuration("HTTP_WRITE_TIMEOUT", 15*time.Second),
 		IdleTimeout:  getEnvDuration("HTTP_IDLE_TIMEOUT", 60*time.Second),
 		TrustProxy:   getEnvBool("TRUST_PROXY", false),
+
+		SQLitePath: getEnv("SQLITE_PATH", "data/app.db"),
 
 		JWTSecret:        getEnv("JWT_SECRET", "change_me_in_env"),
 		JWTExpireMinutes: getEnvInt("JWT_EXPIRE_MINUTES", 60*24), // 1 day default
