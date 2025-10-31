@@ -12,7 +12,7 @@ export const STRATEGY_CATEGORIES = {
 // 风险等级
 export const RISK_LEVELS = {
   LOW: 'low',
-  MEDIUM: 'medium', 
+  MEDIUM: 'medium',
   HIGH: 'high'
 }
 
@@ -34,7 +34,7 @@ export const strategyConfig = [
     suitableFor: '趋势明显的市场环境',
     enabled: true
   },
-  
+
   {
     id: 'breakout',
     name: '突破策略',
@@ -50,7 +50,7 @@ export const strategyConfig = [
     suitableFor: '震荡突破的市场环境',
     enabled: true
   },
-  
+
   {
     id: 'reversal',
     name: '反转策略',
@@ -66,7 +66,7 @@ export const strategyConfig = [
     suitableFor: '超跌反弹的市场环境',
     enabled: true
   },
-  
+
   {
     id: 'bollinger_reversal',
     name: '布林带反转',
@@ -82,7 +82,7 @@ export const strategyConfig = [
     suitableFor: '震荡市场，高波动股票',
     enabled: true
   },
-  
+
   {
     id: 'momentum',
     name: '动量策略',
@@ -105,75 +105,8 @@ export const getEnabledStrategies = () => {
   return strategyConfig.filter(strategy => strategy.enabled)
 }
 
-// 根据分类获取策略
-export const getStrategiesByCategory = (category) => {
-  return strategyConfig.filter(strategy => 
-    strategy.category === category && strategy.enabled
-  )
-}
-
 // 获取策略详情
 export const getStrategyById = (id) => {
   return strategyConfig.find(strategy => strategy.id === id)
 }
 
-// 获取策略名称
-export const getStrategyName = (id) => {
-  const strategy = getStrategyById(id)
-  return strategy ? strategy.name : '未知策略'
-}
-
-// 获取策略描述
-export const getStrategyDescription = (id) => {
-  const strategy = getStrategyById(id)
-  return strategy ? strategy.description : '未知策略'
-}
-
-// 获取策略详细说明（用于弹窗显示）
-export const getStrategyDetailContent = (id) => {
-  const strategy = getStrategyById(id)
-  if (!strategy) return null
-  
-  return {
-    name: strategy.name,
-    description: strategy.description,
-    detail: strategy.detail,
-    parameters: strategy.parameters,
-    winRate: strategy.winRate,
-    suitableFor: strategy.suitableFor
-  }
-}
-
-// 获取策略选项（用于下拉选择）
-export const getStrategyOptions = () => {
-  return getEnabledStrategies().map(strategy => ({
-    value: strategy.id,
-    label: `${strategy.name} - ${strategy.description}`
-  }))
-}
-
-// 更新策略配置（用于管理功能）
-export const updateStrategyConfig = (id, updates) => {
-  const index = strategyConfig.findIndex(strategy => strategy.id === id)
-  if (index !== -1) {
-    strategyConfig[index] = { ...strategyConfig[index], ...updates }
-    return true
-  }
-  return false
-}
-
-// 添加新策略
-export const addStrategy = (strategy) => {
-  const newStrategy = {
-    id: strategy.id || `strategy_${Date.now()}`,
-    enabled: true,
-    ...strategy
-  }
-  strategyConfig.push(newStrategy)
-  return newStrategy
-}
-
-// 删除策略（软删除）
-export const deleteStrategy = (id) => {
-  return updateStrategyConfig(id, { enabled: false })
-}

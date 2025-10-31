@@ -1,6 +1,6 @@
 // 首页 Store
 import { defineStore } from 'pinia'
-import { currentApi } from '@/services/api'
+import * as homeApi from '../api'
 
 export const useHomeStore = defineStore('home', {
   state: () => ({
@@ -37,7 +37,7 @@ export const useHomeStore = defineStore('home', {
     async loadHomeStats() {
       this.setLoading(true)
       try {
-        const response = await currentApi.home.getHomeStats()
+        const response = await homeApi.getHomeStats()
         if (response.code === 0) {
           this.homeStats = response.data
         }
@@ -50,7 +50,7 @@ export const useHomeStore = defineStore('home', {
     
     async loadQuickActions() {
       try {
-        const response = await currentApi.home.getQuickActions()
+        const response = await homeApi.getQuickActions()
         if (response.code === 0) {
           this.quickActions = response.data
         }
@@ -61,7 +61,7 @@ export const useHomeStore = defineStore('home', {
     
     async loadRecentTrades(limit = 5) {
       try {
-        const response = await currentApi.home.getRecentTrades(limit)
+        const response = await homeApi.getRecentTrades(limit)
         if (response.code === 0) {
           this.recentTrades = response.data
         }
@@ -72,7 +72,7 @@ export const useHomeStore = defineStore('home', {
     
     async loadMarketOverview() {
       try {
-        const response = await currentApi.home.getMarketOverview()
+        const response = await homeApi.getMarketOverview()
         if (response.code === 0) {
           this.marketOverview = response.data
         }

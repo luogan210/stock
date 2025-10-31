@@ -18,7 +18,7 @@
             v-for="stock in availableStocks"
             :key="stock.code"
             :value="stock.code"
-            :label="`${stock.name} (${stock.code}) - ${getMarketText(stock.marketType)}`"
+            :label="`${stock.name} (${stock.code}) - ${getStockCategoryText(stock.category)}`"
           />
         </t-select>
       </t-form-item>
@@ -100,8 +100,8 @@
       <!-- 风险等级显示 -->
       <t-form-item label="风险等级">
         <div class="risk-level-display">
-          <t-tag 
-            :color="riskInfo.color" 
+          <t-tag
+            :color="riskInfo.color"
             variant="light-outline"
             size="medium"
           >
@@ -218,21 +218,17 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { MessagePlugin } from 'tdesign-vue-next'
 import {
-  getEnabledStrategies,
   getStrategyById
 } from '@/utils/strategyConfig'
+
+import {useStockStore,useStrategyStore,useTradingStrategyStore} from "@/stores/index.js";
+import { getStockCategoryText } from '@/views/stock/utils'
 import {
-  getEnabledTradingStrategies
-} from '@/utils/tradingStrategyConfig'
-import {useStockStore} from "@/stores/index.js";
-import { getMarketText } from '@/utils/stockConfig'
-import { 
-  calculateRiskLevel, 
-  getRiskSuggestions, 
+  calculateRiskLevel,
+  getRiskSuggestions,
   validateRiskParameters as validateRisk,
-  RISK_LEVEL_TEXT 
+  RISK_LEVEL_TEXT
 } from '@/utils/riskCalculator'
 
 const props = defineProps({
@@ -246,15 +242,17 @@ const emit = defineEmits(['submit'])
 
 const formRef = ref()
 const showStrategyPopup = ref(false)
+const strategyStore = useStrategyStore()
+const tradingStrategyStore = useTradingStrategyStore()
 
 // 获取可用策略
 const availableStrategies = computed(() => {
-  return getEnabledStrategies()
+  return strategyStore.strategies
 })
 
 // 获取可用交易策略
 const availableTradingStrategies = computed(() => {
-  return getEnabledTradingStrategies()
+  return tradingStrategyStore.tradingStrategies
 })
 
 // 股票store
@@ -364,7 +362,7 @@ const updateRiskLevel = () => {
     const risk = calculateRiskLevel(formData.strategy, formData.tradingStrategy)
     riskInfo.value = risk
     formData.riskLevel = risk.level
-    
+
     // 验证当前价格参数
     validateRiskParameters()
   } else {
@@ -405,19 +403,19 @@ const getRiskLevelText = (riskLevel) => {
 const getFormData = () => {
   // 确保风险等级被包含在表单数据中
   const data = { ...formData }
-  
+
   // 如果有计算出的风险等级，使用计算结果
   if (riskInfo.value.level) {
     data.riskLevel = riskInfo.value.level
   }
-  
+
   console.log('提交的表单数据:', data)
   return data
 }
 
 const setFormData = (data) => {
   Object.assign(formData, data)
-  
+
   // 如果设置了策略数据，重新计算风险等级
   if (data.strategy && data.tradingStrategy) {
     // 使用 nextTick 确保数据已经更新

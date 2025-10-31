@@ -7,6 +7,14 @@
       label-width="120px" 
       scroll-to-first-error="smooth"
     >
+      <t-form-item label="日志名称" name="logName">
+        <t-input
+          class="form-input-md"
+          v-model="formData.logName"
+          placeholder="请输入日志名称"
+        />
+      </t-form-item>
+
       <t-form-item label="执行交易计划" name="planName">
         <t-select
           class="form-input-md"
@@ -88,6 +96,16 @@
         </t-select>
       </t-form-item>
 
+      <t-form-item label="交易状态" name="tradingStatus">
+        <t-select class="form-input-md" v-model="formData.tradingStatus" placeholder="请选择交易状态">
+          <t-option value="pending" label="待执行" />
+          <t-option value="executing" label="执行中" />
+          <t-option value="completed" label="已完成" />
+          <t-option value="cancelled" label="已取消" />
+          <t-option value="failed" label="执行失败" />
+        </t-select>
+      </t-form-item>
+
       <t-form-item label="备注" name="remark">
         <t-textarea
           class="form-input-lg"
@@ -107,7 +125,7 @@ import { MessagePlugin } from 'tdesign-vue-next'
 import {
   getEnabledTradingStrategies
 } from '@/utils/tradingStrategyConfig'
-import { useStockStore } from "../stock/store/index.js";
+import { useStockStore } from "@/stores/index.js";
 
 const props = defineProps({
   isEditMode: {
@@ -130,7 +148,7 @@ const stockStore = useStockStore()
 
 // 获取可用股票
 const availableStocks = computed(() => {
-  const stocks = stockStore.getStockList
+  const stocks = stockStore.stocks
   return stocks ? stocks.filter(stock => stock.enabled) : []
 })
 
@@ -145,6 +163,7 @@ const availablePlans = computed(() => {
 
 // 表单数据
 const formData = reactive({
+  logName: '',
   planName: '',
   stockCode: '',
   stockName: '',
@@ -153,11 +172,15 @@ const formData = reactive({
   price: null,
   quantity: null,
   strategy: '',
+  tradingStatus: 'pending',
   remark: ''
 })
 
 // 表单验证规则
 const formRules = {
+  logName: [
+    { required: true, message: '请输入日志名称', trigger: 'blur' }
+  ],
   stockCode: [
     { required: true, message: '请选择股票', trigger: 'change' }
   ],
@@ -175,6 +198,9 @@ const formRules = {
   ],
   strategy: [
     { required: true, message: '请选择交易策略', trigger: 'change' }
+  ],
+  tradingStatus: [
+    { required: true, message: '请选择交易状态', trigger: 'change' }
   ]
 }
 

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { getStockList, createStock, updateStock, deleteStock, getStockDetail } from '../api'
+import { stockApi } from '../api'
 import { MessagePlugin } from 'tdesign-vue-next'
 
 export const useStockStore = defineStore('stock', () => {
@@ -17,7 +17,7 @@ export const useStockStore = defineStore('stock', () => {
   const loadStocks = async (params = {}) => {
     loading.value = true
     try {
-      const response = await getStockList(params)
+      const response = await stockApi.getStocks(params)
       if (response.data && response.data.list) {
         stocks.value = response.data.list
       } else {
@@ -35,7 +35,7 @@ export const useStockStore = defineStore('stock', () => {
   // 创建股票
   const addStock = async (stockData) => {
     try {
-      const response = await createStock(stockData)
+      const response = await stockApi.createStock(stockData)
       if (response.data && response.data.id) {
         // 重新加载列表
         await loadStocks()
@@ -50,7 +50,7 @@ export const useStockStore = defineStore('stock', () => {
   // 更新股票
   const updateStockById = async (id, stockData) => {
     try {
-      const response = await updateStock(id, stockData)
+      const response = await stockApi.updateStock(id, stockData)
       if (response.data) {
         // 重新加载列表
         await loadStocks()
@@ -65,7 +65,7 @@ export const useStockStore = defineStore('stock', () => {
   // 删除股票
   const removeStock = async (id) => {
     try {
-      await deleteStock(id)
+      await stockApi.deleteStock(id)
       // 重新加载列表
       await loadStocks()
     } catch (error) {
@@ -77,7 +77,7 @@ export const useStockStore = defineStore('stock', () => {
   // 获取股票详情
   const getStockById = async (id) => {
     try {
-      const response = await getStockDetail(id)
+      const response = await stockApi.getStockDetail(id)
       if (response.data) {
         currentStock.value = response.data
         return response.data

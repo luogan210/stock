@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"server/utils"
 	"sync"
 
 	_ "modernc.org/sqlite"
@@ -26,21 +27,27 @@ type DB struct {
 // OpenSQLite opens (and creates if missing) a SQLite database at the given path.
 func OpenSQLite(path string) (*DB, error) {
 	once.Do(func() {
+		utils.LogInfo("正在创建数据库目录: %s", filepath.Dir(path))
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			initError = fmt.Errorf("mkdir data dir: %w", err)
+			utils.LogError("创建数据库目录失败: %v", err)
 			return
 		}
 		dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)", path)
+		utils.LogInfo("正在打开SQLite数据库: %s", path)
 		db, err := sql.Open("sqlite", dsn)
 		if err != nil {
 			initError = fmt.Errorf("open sqlite: %w", err)
+			utils.LogError("打开SQLite数据库失败: %v", err)
 			return
 		}
 		if err := db.Ping(); err != nil {
 			initError = fmt.Errorf("ping sqlite: %w", err)
+			utils.LogError("数据库连接测试失败: %v", err)
 			return
 		}
 		globalDB = &DB{SQL: db}
+		utils.LogInfo("SQLite数据库连接成功")
 	})
 	return globalDB, initError
 }
@@ -83,6 +90,7 @@ func (d *DB) Migrate() error {
         );`,
 		`CREATE TABLE IF NOT EXISTS logs (
             id TEXT PRIMARY KEY,
+            title TEXT,
             plan_name TEXT,
             stock_code TEXT NOT NULL,
             stock_name TEXT,
@@ -92,6 +100,7 @@ func (d *DB) Migrate() error {
             quantity INTEGER NOT NULL,
             strategy TEXT,
             remark TEXT,
+            status TEXT DEFAULT 'pending',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );`,
@@ -109,15 +118,85 @@ func (d *DB) Migrate() error {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );`,
 	}
-	for _, s := range stmts {
+
+	// 执行创建表语句
+	utils.LogInfo("正在创建数据库表...")
+	for i, s := range stmts {
+		tableNames := []string{"stocks", "plans", "logs", "reviews"}
+		if i < len(tableNames) {
+			utils.LogInfo("正在创建表: %s", tableNames[i])
+		}
 		if _, err := d.SQL.Exec(s); err != nil {
+			utils.LogError("创建表失败: %v", err)
 			return fmt.Errorf("migrate: %w", err)
 		}
 	}
+	utils.LogInfo("数据库表创建完成")
+
+	// 执行表结构更新语句（如果列不存在则添加）
+	utils.LogInfo("正在检查并更新表结构...")
+	alterStmts := []string{
+		`ALTER TABLE logs ADD COLUMN title TEXT;`,
+		`ALTER TABLE logs ADD COLUMN status TEXT DEFAULT 'pending';`,
+	}
+
+	for _, s := range alterStmts {
+		// 使用 PRAGMA table_info 检查列是否存在
+		if err := d.addColumnIfNotExists(s); err != nil {
+			utils.LogError("更新表结构失败: %v", err)
+			return fmt.Errorf("alter table: %w", err)
+		}
+	}
+	utils.LogInfo("表结构检查完成")
+
 	return nil
 }
 
-func (d *DB) Close() error { return d.SQL.Close() }
+// addColumnIfNotExists 检查列是否存在，如果不存在则添加
+func (d *DB) addColumnIfNotExists(alterStmt string) error {
+	// 提取表名和列名
+	var tableName, columnName string
+	if alterStmt == `ALTER TABLE logs ADD COLUMN title TEXT;` {
+		tableName = "logs"
+		columnName = "title"
+	} else if alterStmt == `ALTER TABLE logs ADD COLUMN status TEXT DEFAULT 'pending';` {
+		tableName = "logs"
+		columnName = "status"
+	} else {
+		return fmt.Errorf("unsupported alter statement: %s", alterStmt)
+	}
+
+	// 检查列是否存在
+	checkQuery := `SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?`
+	var count int
+	err := d.SQL.QueryRow(checkQuery, tableName, columnName).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("check column exists: %w", err)
+	}
+
+	// 如果列不存在，则添加
+	if count == 0 {
+		utils.LogInfo("表 %s 中缺少列 %s，正在添加...", tableName, columnName)
+		if _, err := d.SQL.Exec(alterStmt); err != nil {
+			utils.LogError("添加列失败: %v", err)
+			return fmt.Errorf("add column: %w", err)
+		}
+		utils.LogInfo("成功添加列 %s.%s", tableName, columnName)
+	} else {
+		utils.LogDebug("列 %s.%s 已存在，跳过", tableName, columnName)
+	}
+
+	return nil
+}
+
+func (d *DB) Close() error {
+	if err := d.SQL.Close(); err != nil {
+		utils.LogError("关闭数据库连接时出错: %v", err)
+		return err
+	}
+	utils.LogInfo("数据库连接已关闭")
+	return nil
+}
 
 // Exec 执行SQL语句
 func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {

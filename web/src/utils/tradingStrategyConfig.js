@@ -15,7 +15,7 @@ export const TRADING_STRATEGY_CATEGORIES = {
 // 风险等级
 export const RISK_LEVELS = {
   LOW: 'low',
-  MEDIUM: 'medium', 
+  MEDIUM: 'medium',
   HIGH: 'high'
 }
 
@@ -40,7 +40,7 @@ export const tradingStrategyConfig = [
     cons: ['需要专业技能', '手续费成本高', '心理压力大'],
     enabled: true
   },
-  
+
   {
     id: 'daytrading',
     name: '日内交易',
@@ -60,7 +60,7 @@ export const tradingStrategyConfig = [
     cons: ['需要盯盘时间', '可能错过趋势机会', '手续费成本'],
     enabled: true
   },
-  
+
   {
     id: 'swing',
     name: '波段交易',
@@ -80,7 +80,7 @@ export const tradingStrategyConfig = [
     cons: ['需要技术分析能力', '可能错过短期机会', '需要耐心'],
     enabled: true
   },
-  
+
   {
     id: 'position',
     name: '持仓交易',
@@ -100,7 +100,7 @@ export const tradingStrategyConfig = [
     cons: ['资金占用时间长', '需要基本面分析', '可能错过短期机会'],
     enabled: true
   },
-  
+
   {
     id: 'arbitrage',
     name: '套利交易',
@@ -129,7 +129,7 @@ export const getEnabledTradingStrategies = () => {
 
 // 根据分类获取交易策略
 export const getTradingStrategiesByCategory = (category) => {
-  return tradingStrategyConfig.filter(strategy => 
+  return tradingStrategyConfig.filter(strategy =>
     strategy.category === category && strategy.enabled
   )
 }
@@ -139,87 +139,7 @@ export const getTradingStrategyById = (id) => {
   return tradingStrategyConfig.find(strategy => strategy.id === id)
 }
 
-// 获取交易策略名称
-export const getTradingStrategyName = (id) => {
-  const strategy = getTradingStrategyById(id)
-  return strategy ? strategy.name : '未知策略'
-}
-
-// 获取交易策略描述
-export const getTradingStrategyDescription = (id) => {
-  const strategy = getTradingStrategyById(id)
-  return strategy ? strategy.description : '未知策略'
-}
-
-// 获取交易策略详细说明（用于弹窗显示）
-export const getTradingStrategyDetailContent = (id) => {
-  const strategy = getTradingStrategyById(id)
-  if (!strategy) return null
-  
-  return {
-    name: strategy.name,
-    description: strategy.description,
-    detail: strategy.detail,
-    parameters: strategy.parameters,
-    winRate: strategy.winRate,
-    suitableFor: strategy.suitableFor,
-    pros: strategy.pros,
-    cons: strategy.cons
-  }
-}
-
-// 获取交易策略选项（用于下拉选择）
-export const getTradingStrategyOptions = () => {
-  return getEnabledTradingStrategies().map(strategy => ({
-    value: strategy.id,
-    label: `${strategy.name} - ${strategy.description}`
-  }))
-}
-
-// 更新交易策略配置（用于管理功能）
-export const updateTradingStrategyConfig = (id, updates) => {
-  const index = tradingStrategyConfig.findIndex(strategy => strategy.id === id)
-  if (index !== -1) {
-    tradingStrategyConfig[index] = { ...tradingStrategyConfig[index], ...updates }
-    return true
-  }
-  return false
-}
-
-// 添加新交易策略
-export const addTradingStrategy = (strategy) => {
-  const newStrategy = {
-    id: strategy.id || `trading_strategy_${Date.now()}`,
-    enabled: true,
-    ...strategy
-  }
-  tradingStrategyConfig.push(newStrategy)
-  return newStrategy
-}
-
-// 删除交易策略（软删除）
-export const deleteTradingStrategy = (id) => {
-  return updateTradingStrategyConfig(id, { enabled: false })
-}
-
 // 获取策略分类文本
 export const getTradingStrategyCategoryText = (category) => {
-  const texts = {
-    [TRADING_STRATEGY_CATEGORIES.SCALPING]: '超短线',
-    [TRADING_STRATEGY_CATEGORIES.DAY_TRADING]: '日内交易',
-    [TRADING_STRATEGY_CATEGORIES.SWING]: '波段交易',
-    [TRADING_STRATEGY_CATEGORIES.POSITION]: '持仓交易',
-    [TRADING_STRATEGY_CATEGORIES.ARBITRAGE]: '套利交易'
-  }
-  return texts[category] || '未知'
-}
-
-// 获取风险等级文本
-export const getRiskLevelText = (riskLevel) => {
-  const texts = {
-    [RISK_LEVELS.LOW]: '低风险',
-    [RISK_LEVELS.MEDIUM]: '中风险',
-    [RISK_LEVELS.HIGH]: '高风险'
-  }
-  return texts[riskLevel] || '未知'
+  return tradingStrategyConfig.find(strategy => strategy.category === category)?.name || '未知' 
 }

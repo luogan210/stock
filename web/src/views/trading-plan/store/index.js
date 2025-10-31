@@ -1,7 +1,7 @@
 // 交易计划页面 Store
 import { defineStore } from 'pinia'
 import { generateId } from '@/utils/helpers'
-import { currentApi } from '@/services/api'
+import * as tradingPlanApi from '../api' 
 
 export const useTradingPlanStore = defineStore('tradingPlan', {
   state: () => ({
@@ -24,8 +24,8 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
     async loadPlans(params = {}) {
       this.setLoading(true)
       try {
-        // 使用当前环境的 API
-        const response = await currentApi.tradingPlan.getPlans(params)
+        // 使用真实 API
+        const response = await tradingPlanApi.getPlans(params)
         if (response.code === 0) {
           this.plans = response.data.list || []
           // 返回分页信息
@@ -53,7 +53,7 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
     
     async addPlan(plan) {
       try {
-        const response = await currentApi.tradingPlan.createPlan(plan)
+        const response = await tradingPlanApi.createPlan(plan)
         if (response.code === 0) {
           this.plans.unshift(response.data)
           this.saveToLocalStorage()
@@ -69,7 +69,7 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
     
     async updatePlan(planId, updates) {
       try {
-        const response = await currentApi.tradingPlan.updatePlan(planId, updates)
+        const response = await tradingPlanApi.updatePlan(planId, updates)
         if (response.code === 0) {
           const index = this.plans.findIndex(plan => plan.id === planId)
           if (index !== -1) {
@@ -93,7 +93,7 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
     
     async getPlanById(planId) {
       try {
-        const response = await currentApi.tradingPlan.getPlanDetail(planId)
+        const response = await tradingPlanApi.getPlanDetail(planId)
         if (response.code === 0) {
           return response.data
         }
@@ -111,7 +111,7 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
     
     async updatePlanStatus(planId, status) {
       try {
-        const response = await currentApi.tradingPlan.updatePlanStatus(planId, status)
+        const response = await tradingPlanApi.updatePlanStatus(planId, status)
         if (response.code === 0) {
           const plan = this.plans.find(plan => plan.id === planId)
           if (plan) {
@@ -142,7 +142,7 @@ export const useTradingPlanStore = defineStore('tradingPlan', {
     
     async deletePlan(planId) {
       try {
-        const response = await currentApi.tradingPlan.deletePlan(planId)
+        const response = await tradingPlanApi.deletePlan(planId)
         if (response.code === 0) {
           this.plans = this.plans.filter(plan => plan.id !== planId)
           this.saveToLocalStorage()

@@ -21,7 +21,7 @@
             <t-input
               class="form-input-md"
               v-model="searchForm.keyword"
-              placeholder="搜索股票代码、名称或日志内容"
+              placeholder="搜索日志名称、股票代码、名称或日志内容"
               clearable
             >
               <template #prefix-icon>
@@ -90,6 +90,15 @@
                 variant="light"
               >
                 {{ row.type === 'buy' ? '买多' : '买空' }}
+              </t-tag>
+            </template>
+            
+            <template #tradingStatus="{ row }">
+              <t-tag
+                :theme="getTradingStatusTheme(row.tradingStatus)"
+                variant="light"
+              >
+                {{ getTradingStatusText(row.tradingStatus) }}
               </t-tag>
             </template>
             
@@ -176,8 +185,9 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTradingLogStore } from './store'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { LOG_STATUS_TEXT, LOG_STATUS_THEME, TRADING_TYPE_TEXT } from '@/utils/constants'
 import { filterData, formatProfit } from '@/utils/helpers'
+import { getTradingLogStatusText, getTradingLogStatusTheme, getTradingStatusText, getTradingStatusTheme } from './config'
+import { TRADING_TYPES, RISK_LEVELS } from '@/utils/constants'
 
 const router = useRouter()
 const tradingLogStore = useTradingLogStore()
@@ -194,13 +204,14 @@ const showDetailDialog = ref(false)
 const selectedLog = ref(null)
 
 const columns = [
-  { colKey: 'title', title: '日志标题', width: 180 },
+  { colKey: 'title', title: '日志名称', width: 150 },
   { colKey: 'stock', title: '股票', width: 150 },
   { colKey: 'type', title: '交易方向', width: 80 },
   { colKey: 'price', title: '成交价格', width: 100 },
   { colKey: 'quantity', title: '成交数量', width: 80 },
   { colKey: 'profit', title: '盈亏', width: 100 },
-  { colKey: 'status', title: '状态', width: 80 },
+  { colKey: 'tradingStatus', title: '交易状态', width: 100 },
+  { colKey: 'status', title: '日志状态', width: 80 },
   { colKey: 'planName', title: '执行交易计划', width: 120 },
   { colKey: 'tradingTime', title: '交易时间', width: 150 },
   { colKey: 'operation', title: '操作', width: 150 }
@@ -218,8 +229,8 @@ const filteredLogs = computed(() => {
 })
 
 // 方法
-const getStatusTheme = (status) => LOG_STATUS_THEME[status] || 'default'
-const getStatusText = (status) => LOG_STATUS_TEXT[status] || status
+const getStatusTheme = (status) => getTradingLogStatusTheme(status) || 'default'  
+const getStatusText = (status) => getTradingLogStatusText(status) || status
 const getProfitClass = (profit) => formatProfit(profit).class
 
 const getActionOptions = (row) => {
@@ -237,11 +248,12 @@ const getLogDetailData = (log) => [
   { label: '日志标题', content: log.title },
   { label: '股票代码', content: log.stockCode },
   { label: '股票名称', content: log.stockName },
-  { label: '交易方向', content: TRADING_TYPE_TEXT[log.type] || log.type },
+  { label: '交易方向', content: getTradingTypeText(log.type) || log.type },
   { label: '成交价格', content: `¥${log.price}` },
   { label: '成交数量', content: log.quantity },
   { label: '盈亏金额', content: formatProfit(log.profit).text },
-  { label: '交易状态', content: getStatusText(log.status) },
+  { label: '交易状态', content: getTradingStatusText(log.tradingStatus) },
+  { label: '日志状态', content: getStatusText(log.status) },
   { label: '执行交易计划', content: log.planName || '无关联计划' },
   { label: '交易时间', content: log.tradingTime },
   { label: '创建时间', content: log.createTime },

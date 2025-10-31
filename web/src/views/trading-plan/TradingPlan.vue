@@ -32,16 +32,13 @@
           <t-form-item label="状态" name="status">
             <t-select class="form-input-md" v-model="searchForm.status" placeholder="状态筛选">
               <t-option value="" label="全部状态" />
-              <t-option value="pending" label="未执行" />
-              <t-option value="executing" label="执行中" />
-              <t-option value="completed" label="已完成" />
+              <t-option v-for="status in PLAN_STATUS" :key="status" :value="status" :label="getTradingPlanStatusText(status)" />
             </t-select>
           </t-form-item>
           <t-form-item label="方向" name="type">
             <t-select class="form-input-md" v-model="searchForm.type" placeholder="交易方向筛选">
               <t-option value="" label="全部方向" />
-              <t-option value="buy" label="买多" />
-              <t-option value="sell" label="买空" />
+              <t-option v-for="type in TRADING_TYPES" :key="type" :value="type" :label="type.text" />
             </t-select>
           </t-form-item>
           <t-form-item label="创建时间" name="dateRange">
@@ -222,7 +219,8 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTradingPlanStore } from './store'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { PLAN_STATUS_TEXT, PLAN_STATUS_THEME, TRADING_TYPE_TEXT } from '@/utils/constants'
+import { PLAN_STATUS, getTradingPlanStatusText, getTradingPlanStatusTheme } from './config'
+import { TRADING_TYPES, RISK_LEVELS } from '@/utils/constants'
 import { filterData } from '@/utils/helpers'
 
 const router = useRouter()
@@ -264,8 +262,8 @@ const filteredPlans = computed(() => {
 })
 
 // 方法
-const getStatusTheme = (status) => PLAN_STATUS_THEME[status] || 'default'
-const getStatusText = (status) => PLAN_STATUS_TEXT[status] || status
+const getStatusTheme = (status) => getTradingPlanStatusTheme(status) || 'default'
+const getStatusText = (status) => getTradingPlanStatusText(status) || status
 
 
 const getActionOptions = (row) => {
@@ -292,7 +290,7 @@ const getPlanDetailData = (plan) => {
     { label: '计划名称', content: plan.name },
     { label: '股票代码', content: plan.stockCode },
     { label: '股票名称', content: plan.stockName },
-    { label: '交易方向', content: TRADING_TYPE_TEXT[plan.type] || plan.type },
+    { label: '交易方向', content: getTradingTypeText(plan.type) || plan.type },
     { label: '计划买进价格', content: `¥${plan.targetPrice}` },
     { label: '计划数量', content: plan.quantity },
     { label: '止损价格', content: plan.stopLoss ? `¥${plan.stopLoss}` : '未设置' },

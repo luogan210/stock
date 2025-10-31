@@ -5,7 +5,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { currentApi } from '@/services/api'
+import * as tradingReviewApi from '../api'
 
 export const useTradingReviewStore = defineStore('tradingReview', () => {
   // 状态
@@ -29,8 +29,8 @@ export const useTradingReviewStore = defineStore('tradingReview', () => {
   const loadReviews = async (params = {}) => {
     try {
       loading.value = true
-      const response = await currentApi.tradingReview.getReviews(params)
-      
+      const response = await tradingReviewApi.getReviews(params)
+
       if (response.code === 0) {
         reviews.value = response.data.list || []
         return response.data
@@ -49,8 +49,8 @@ export const useTradingReviewStore = defineStore('tradingReview', () => {
   const loadReview = async (id) => {
     try {
       loading.value = true
-      const response = await currentApi.tradingReview.getReview(id)
-      
+      const response = await tradingReviewApi.getReview(id)
+
       if (response.code === 0) {
         return response.data
       } else {
@@ -68,8 +68,8 @@ export const useTradingReviewStore = defineStore('tradingReview', () => {
   const addReview = async (reviewData) => {
     try {
       loading.value = true
-      const response = await currentApi.tradingReview.createReview(reviewData)
-      
+      const response = await tradingReviewApi.createReview(reviewData)
+
       if (response.code === 0) {
         reviews.value.unshift(response.data)
         return response.data
@@ -88,8 +88,8 @@ export const useTradingReviewStore = defineStore('tradingReview', () => {
   const updateReview = async (id, reviewData) => {
     try {
       loading.value = true
-      const response = await currentApi.tradingReview.updateReview(id, reviewData)
-      
+      const response = await tradingReviewApi.updateReview(id, reviewData)
+
       if (response.code === 0) {
         const index = reviews.value.findIndex(r => r.id === id)
         if (index !== -1) {
@@ -111,8 +111,8 @@ export const useTradingReviewStore = defineStore('tradingReview', () => {
   const deleteReview = async (id) => {
     try {
       loading.value = true
-      const response = await currentApi.tradingReview.deleteReview(id)
-      
+      const response = await tradingReviewApi.deleteReview(id)
+
       if (response.code === 0) {
         const index = reviews.value.findIndex(r => r.id === id)
         if (index !== -1) {
@@ -135,7 +135,7 @@ export const useTradingReviewStore = defineStore('tradingReview', () => {
     try {
       loading.value = true
       const response = await currentApi.tradingReview.getReviewStats()
-      
+
       if (response.code === 0) {
         reviewStats.value = response.data
         return response.data
@@ -188,12 +188,12 @@ export const useTradingReviewStore = defineStore('tradingReview', () => {
     reviews,
     loading,
     reviewStats,
-    
+
     // 计算属性
     getReviews,
     getReviewStats,
     isLoading,
-    
+
     // 方法
     loadReviews,
     loadReview,

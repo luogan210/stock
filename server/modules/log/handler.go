@@ -34,6 +34,7 @@ func RegisterLogRoutes(r *gin.RouterGroup) {
 			req := &LogListRequest{
 				Keyword:   c.Query("keyword"),
 				Type:      c.Query("type"),
+				Status:    c.Query("status"),
 				StockCode: c.Query("stockCode"),
 				PlanName:  c.Query("planName"),
 				StartDate: c.Query("startDate"),

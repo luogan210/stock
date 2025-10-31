@@ -4,16 +4,18 @@
 
 ## 📋 项目概述
 
-本项目是一个功能完整的股票分析系统，采用现代化的前端技术栈，提供直观的用户界面和丰富的功能模块。系统支持股票管理、交易计划制定、交易日志记录、复盘分析等核心功能。
+本项目是一个功能完整的股票分析系统，采用现代化的前端技术栈，提供直观的用户界面和丰富的功能模块。系统支持股票管理、交易计划制定、交易日志记录、复盘分析等核心功能，并集成了智能风险计算和策略配置系统。
 
 ## 🚀 技术栈
 
 - **前端框架**: Vue 3.4.0
-- **UI 组件库**: TDesign Vue Next 1.8.0
+- **UI 组件库**: TDesign Vue Next 1.17.1
 - **状态管理**: Pinia 2.1.7
 - **路由管理**: Vue Router 4.2.5
 - **HTTP 客户端**: Axios 1.12.2
+- **日期处理**: Day.js 1.11.18
 - **构建工具**: Vite 5.0.8
+- **TypeScript**: 支持 TypeScript 开发
 - **代码规范**: ESLint + Prettier
 
 ## 📁 项目结构
@@ -22,14 +24,16 @@
 web/
 ├── src/
 │   ├── components/           # 公共组件
-│   │   └── FlexRow.vue      # 弹性布局组件
+│   │   ├── FlexRow.vue      # 弹性布局组件
+│   │   └── FormContainer.vue # 通用表单容器组件
 │   ├── router/              # 路由配置
 │   │   └── index.js         # 路由定义
 │   ├── services/            # API 服务
 │   │   ├── api.js           # 统一 API 入口
 │   │   ├── apiService.js    # API 服务封装
 │   │   ├── http.js          # HTTP 客户端配置
-│   │   └── interceptors.js  # 请求拦截器
+│   │   ├── interceptors.js  # 请求拦截器
+│   │   └── README.md        # API 服务说明
 │   ├── stores/              # 状态管理
 │   │   ├── index.js         # Store 统一入口
 │   │   ├── user/            # 用户状态
@@ -41,6 +45,7 @@ web/
 │   │   ├── constants.js     # 常量定义
 │   │   ├── helpers.js       # 辅助函数
 │   │   ├── mockData.js      # 模拟数据
+│   │   ├── riskCalculator.js # 风险计算器
 │   │   ├── stockConfig.js   # 股票配置
 │   │   ├── strategyConfig.js # 策略配置
 │   │   └── tradingStrategyConfig.js # 交易策略配置
@@ -50,25 +55,36 @@ web/
 │       │   ├── api/         # API 接口
 │       │   └── store/       # 状态管理
 │       ├── settings/        # 设置页面
+│       │   ├── StrategySettings.vue # 策略设置
+│       │   └── TradingStrategySettings.vue # 交易策略设置
 │       ├── stock/           # 股票管理
-│       │   └── StockManagement.vue
-│       ├── trading-log/     # 交易日志
-│       │   ├── TradingLog.vue
-│       │   ├── TradingLogForm.vue
+│       │   ├── StockManagement.vue # 股票管理页面
+│       │   ├── StockForm.vue # 股票表单组件
+│       │   ├── StockFormService.vue # 股票表单服务
 │       │   ├── api/         # API 接口
 │       │   └── store/       # 状态管理
-│       ├── trading-plan/    # 交易计划
-│       │   ├── TradingPlan.vue
-│       │   ├── TradingPlanForm.vue
+│       ├── trading-log/     # 交易日志
+│       │   ├── TradingLog.vue # 交易日志页面
+│       │   ├── TradingLogForm.vue # 交易日志表单
+│       │   ├── LogFormService.vue # 日志表单服务
+│       │   ├── api/         # API 接口
+│       │   └── store/       # 状态管理
+│       ├── trading-plan/      # 交易计划
+│       │   ├── TradingPlan.vue # 交易计划页面
+│       │   ├── TradingPlanForm.vue # 交易计划表单
+│       │   ├── PlanFormService.vue # 计划表单服务
 │       │   ├── api/         # API 接口
 │       │   └── store/       # 状态管理
 │       └── trading-review/  # 交易复盘
-│           ├── TradingReview.vue
-│           ├── TradingReviewForm.vue
+│           ├── TradingReview.vue # 交易复盘页面
+│           ├── TradingReviewForm.vue # 交易复盘表单
+│           ├── ReviewFormService.vue # 复盘表单服务
 │           ├── api/         # API 接口
 │           └── store/       # 状态管理
 ├── index.html               # HTML 入口
 ├── package.json             # 项目配置
+├── tsconfig.json           # TypeScript 配置
+├── tsconfig.node.json      # Node.js TypeScript 配置
 ├── vite.config.js          # Vite 配置
 ├── start.bat               # Windows 启动脚本
 ├── start.sh                # Linux/Mac 启动脚本
@@ -81,30 +97,47 @@ web/
 - 系统统计数据展示
 - 快速操作入口
 - 关键指标监控
+- 实时数据更新
 
 ### 2. 股票管理
-- 股票信息维护
+- 股票信息维护（新增/编辑/删除）
 - 多市场支持（A股、港股、美股）
 - 股票分类和标签管理
 - 风险等级评估
+- 智能搜索和筛选
 
 ### 3. 交易计划
 - 制定交易策略
 - 设置止盈止损
 - 计划状态跟踪
 - 策略配置管理
+- 风险计算和验证
 
 ### 4. 交易日志
 - 交易记录管理
 - 盈亏统计
 - 交易分析
 - 历史数据查询
+- 实时数据同步
 
 ### 5. 交易复盘
 - 交易回顾分析
 - 经验总结
 - 策略优化建议
 - 学习记录
+- 绩效评估
+
+### 6. 智能风险计算
+- 基于策略的风险评估
+- 动态风险等级计算
+- 风险参数验证
+- 投资建议生成
+
+### 7. 策略配置系统
+- 选股策略管理
+- 交易策略配置
+- 策略参数优化
+- 策略效果分析
 
 ## 🛠️ 开发环境
 
@@ -148,22 +181,38 @@ npm run lint
 ## 📊 数据配置
 
 ### 股票配置 (stockConfig.js)
-- 支持多市场股票配置
+- 支持多市场股票配置（A股、港股、美股）
 - 包含股票基础信息、财务指标
 - 风险等级和流动性评估
 - 行业分类和标签管理
+- 市值和估值指标
 
 ### 策略配置 (strategyConfig.js)
-- 技术分析策略
+- 技术分析策略（趋势跟踪、突破策略、反转策略等）
 - 基本面分析策略
 - 策略参数配置
 - 胜率和适用场景
+- 风险等级评估
+
+### 交易策略配置 (tradingStrategyConfig.js)
+- 交易策略定义（剥头皮、日内交易、波段交易等）
+- 策略参数和风险等级
+- 适用场景和投资建议
+- 策略效果评估
+
+### 风险计算器 (riskCalculator.js)
+- 智能风险等级计算
+- 基于策略的综合风险评估
+- 风险参数验证
+- 投资建议生成
+- 风险等级建议
 
 ### 常量定义 (constants.js)
 - 交易类型和状态
 - 风险等级定义
 - 策略类型映射
 - 分页配置
+- 状态主题映射
 
 ## 🔧 配置说明
 
@@ -171,16 +220,31 @@ npm run lint
 - 自动导入 TDesign 组件
 - 路径别名配置 (`@` 指向 `src`)
 - 开发服务器配置（端口 3000）
+- TypeScript 支持
+
+### TypeScript 配置
+- 严格的类型检查
+- 路径映射配置
+- 模块解析配置
+- 编译选项优化
 
 ### 路由配置
 - 支持嵌套路由
 - 路由守卫和标题设置
 - 404 页面重定向
+- 动态路由参数
 
 ### 状态管理
 - 模块化 Store 设计
 - 统一的状态管理入口
 - 支持异步操作
+- 类型安全的状态操作
+
+### 组件架构
+- 表单容器组件 (FormContainer)
+- 服务层组件 (FormService)
+- 业务逻辑分离
+- 可复用的 UI 组件
 
 ## 🎨 UI 设计
 
@@ -200,16 +264,31 @@ npm run lint
 - 适配不同屏幕尺寸
 - 移动端友好
 - 触摸操作优化
+- 自适应布局
 
 ### 数据管理
 - 本地数据持久化
 - 模拟数据支持
 - 真实 API 集成
+- 数据同步机制
 
 ### 用户体验
 - 直观的操作界面
 - 快速的数据加载
 - 友好的错误提示
+- 智能表单验证
+
+### 智能功能
+- 风险等级自动计算
+- 策略参数验证
+- 投资建议生成
+- 实时数据更新
+
+### 开发体验
+- TypeScript 类型安全
+- 组件化开发
+- 统一的代码规范
+- 热重载开发
 
 ## 🔄 开发流程
 
@@ -217,16 +296,25 @@ npm run lint
 - ESLint 代码检查
 - Prettier 代码格式化
 - 统一的代码风格
+- TypeScript 类型检查
 
 ### 组件开发
 - 组件化开发模式
 - 可复用的业务组件
 - 清晰的组件接口
+- 表单容器组件模式
 
 ### 状态管理
 - 集中式状态管理
 - 模块化的 Store
 - 类型安全的状态操作
+- 异步操作处理
+
+### 架构模式
+- 服务层组件 (FormService)
+- 业务逻辑分离
+- 数据流管理
+- 错误处理机制
 
 ## 📈 性能优化
 

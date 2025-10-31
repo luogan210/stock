@@ -5,6 +5,7 @@ import "time"
 // Log 交易日志模型
 type Log struct {
 	ID          string    `json:"id" db:"id"`
+	Title       string    `json:"title" db:"title"`
 	PlanName    string    `json:"planName" db:"plan_name"`
 	StockCode   string    `json:"stockCode" db:"stock_code"`
 	StockName   string    `json:"stockName" db:"stock_name"`
@@ -14,12 +15,14 @@ type Log struct {
 	Quantity    int       `json:"quantity" db:"quantity"`
 	Strategy    string    `json:"strategy" db:"strategy"`
 	Remark      string    `json:"remark" db:"remark"`
+	Status      string    `json:"status" db:"status"`
 	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
 }
 
 // LogCreateRequest 创建日志请求
 type LogCreateRequest struct {
+	Title       string  `json:"title"`
 	PlanName    string  `json:"planName"`
 	StockCode   string  `json:"stockCode" binding:"required"`
 	StockName   string  `json:"stockName"`
@@ -29,10 +32,12 @@ type LogCreateRequest struct {
 	Quantity    int     `json:"quantity" binding:"required"`
 	Strategy    string  `json:"strategy"`
 	Remark      string  `json:"remark"`
+	Status      string  `json:"status"`
 }
 
 // LogUpdateRequest 更新日志请求
 type LogUpdateRequest struct {
+	Title       *string  `json:"title,omitempty"`
 	PlanName    *string  `json:"planName,omitempty"`
 	StockCode   *string  `json:"stockCode,omitempty"`
 	StockName   *string  `json:"stockName,omitempty"`
@@ -42,12 +47,14 @@ type LogUpdateRequest struct {
 	Quantity    *int     `json:"quantity,omitempty"`
 	Strategy    *string  `json:"strategy,omitempty"`
 	Remark      *string  `json:"remark,omitempty"`
+	Status      *string  `json:"status,omitempty"`
 }
 
 // LogListRequest 日志列表请求
 type LogListRequest struct {
 	Keyword   string `form:"keyword"`
 	Type      string `form:"type"`
+	Status    string `form:"status"`
 	StockCode string `form:"stockCode"`
 	PlanName  string `form:"planName"`
 	StartDate string `form:"startDate"`

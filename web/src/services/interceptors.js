@@ -20,9 +20,13 @@ export default function registerInterceptors(http) {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      // 业务错误弹窗控制，默认true
+      // 业务错误弹窗控制，默认关闭，调用方可显式开启
       if (typeof config.showBizError === 'undefined') {
-        config.showBizError = true;
+        config.showBizError = false;
+      }
+      // 技术类错误全局提示开关（401/5xx/网络异常等），默认开启
+      if (typeof config.silent === 'undefined') {
+        config.silent = false;
       }
       // 统一加上共同参数
       const commonParams = { appId: 'yourAppId', platform: 'web' };
@@ -101,7 +105,11 @@ export default function registerInterceptors(http) {
           default:
             msg = response.data?.message || `请求出错（${code}）`;
         }
-        showError(msg);
+        // 对技术错误的全局提示尊重 silent 标记；401 始终跳转但不强制弹窗
+        if (code !== 401 && !error.config?.silent) {
+          console.log('msg', msg);
+          showError(msg);
+        }
         return Promise.reject({
           isBizError: false,
           code,
@@ -109,7 +117,9 @@ export default function registerInterceptors(http) {
           raw: error,
         });
       }
-      showError('网络连接异常');
+      if (!error.config?.silent) {
+        showError('网络连接异常');
+      }
       return Promise.reject({
         isBizError: false,
         code: undefined,

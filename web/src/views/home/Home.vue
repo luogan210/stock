@@ -106,8 +106,6 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useStockStore } from '../stock/store'
 import { useHomeStore } from './store'
-import { getDateRange } from '@/utils/helpers'
-import { currentApi } from '@/services/api'
 
 const router = useRouter()
 const userStore = useUserStore()

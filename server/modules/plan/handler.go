@@ -13,6 +13,13 @@ type PlanHandler struct {
 	planService PlanService
 }
 
+func NewPlanHandler() *PlanHandler {
+	return &PlanHandler{
+		planService: NewPlanService(),
+	}
+
+}
+
 // RegisterPlanRoutes 注册计划路由
 func RegisterPlanRoutes(r *gin.RouterGroup) {
 	planService := NewPlanService()

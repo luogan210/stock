@@ -1,56 +1,37 @@
 /**
- * 统一 API 服务入口
- * 集中管理所有业务 API，避免循环依赖
+ * 通用 API 工具类
+ * 只提供 HTTP 请求工具方法，不包含业务逻辑
+ *
+ * 职责：
+ * 1. 提供统一的 HTTP 请求方法
+ * 2. 统一处理 API 基础路径
+ * 3. 不涉及具体业务逻辑
  */
 
-// 导入各个页面的 API 服务
-import { tradingPlanApi } from '@/views/trading-plan/api'
-import { tradingLogApi } from '@/views/trading-log/api'
-import { tradingReviewApi } from '@/views/trading-review/api'
-import { homeApi } from '@/views/home/api'
+import http from './http'
 
-// 导入模拟 API 服务
-import { mockTradingPlanApi } from '@/views/trading-plan/api/mock'
-import { mockTradingLogApi } from '@/views/trading-log/api/mock'
-import { mockTradingReviewApi } from '@/views/trading-review/api/mock'
-import { mockHomeApi } from '@/views/home/api/mock'
+// 基础 API 配置
+const API_BASE = '/api'
 
-// 根据环境选择使用真实 API 还是模拟 API
-const isDevelopment = process.env.NODE_ENV === 'development'
-
-// 统一导出所有 API 服务
-export const api = {
-  // 真实 API 服务
-  tradingPlan: tradingPlanApi,
-  tradingLog: tradingLogApi,
-  tradingReview: tradingReviewApi,
-  home: homeApi,
-  
-  // 模拟 API 服务
-  mock: {
-    tradingPlan: mockTradingPlanApi,
-    tradingLog: mockTradingLogApi,
-    tradingReview: mockTradingReviewApi,
-    home: mockHomeApi
-  }
+/**
+ * 通用请求方法
+ * 封装了常用的 HTTP 请求方法，统一处理 API 基础路径
+ * 所有业务逻辑的接口都应该通过这个方法来发送请求
+ */
+export const request = {
+  // 允许传入 axios config，便于使用 showBizError / silent 等开关
+  get: (url, params = {}, config = {}) => {
+    const merged = { ...(config || {}) };
+    merged.params = { ...(config?.params || {}), ...(params || {}) };
+    return http.get(`${API_BASE}${url}`, merged);
+  },
+  post: (url, data = {}, config = {}) => http.post(`${API_BASE}${url}`, data, config),
+  put: (url, data = {}, config = {}) => http.put(`${API_BASE}${url}`, data, config),
+  delete: (url, data = {}, config = {}) => {
+    const merged = { ...(config || {}), data };
+    return http.delete(`${API_BASE}${url}`, merged);
+  },
+  patch: (url, data = {}, config = {}) => http.patch(`${API_BASE}${url}`, data, config)
 }
 
-// 根据环境自动选择 API
-// 注意：为对接后端，交易计划、交易日志、交易复盘在开发环境也强制使用真实接口
-export const currentApi = isDevelopment ? {
-  tradingPlan: tradingPlanApi,
-  tradingLog: tradingLogApi,
-  tradingReview: tradingReviewApi,
-  home: mockHomeApi
-} : {
-  tradingPlan: tradingPlanApi,
-  tradingLog: tradingLogApi,
-  tradingReview: tradingReviewApi,
-  home: homeApi
-}
-
-// 兼容性导出（保持向后兼容）
-export { tradingPlanApi, tradingLogApi, tradingReviewApi, homeApi }
-export { mockTradingPlanApi, mockTradingLogApi, mockTradingReviewApi, mockHomeApi }
-
-export default api
+export default request

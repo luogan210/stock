@@ -1,7 +1,7 @@
 // 交易日志页面 Store
 import { defineStore } from 'pinia'
 import { generateId } from '@/utils/helpers'
-import { currentApi } from '@/services/api'
+import * as tradingLogApi from '../api'
 
 export const useTradingLogStore = defineStore('tradingLog', {
   state: () => ({
@@ -25,8 +25,8 @@ export const useTradingLogStore = defineStore('tradingLog', {
     async loadLogs(params = {}) {
       this.setLoading(true)
       try {
-        // 使用当前环境的 API
-        const response = await currentApi.tradingLog.getLogs(params)
+        // 使用真实 API
+        const response = await tradingLogApi.getLogs(params)
         if (response.code === 0) {
           this.logs = response.data.list || []
           // 返回分页信息
@@ -54,7 +54,7 @@ export const useTradingLogStore = defineStore('tradingLog', {
     
     async addLog(log) {
       try {
-        const response = await currentApi.tradingLog.createLog(log)
+        const response = await tradingLogApi.createLog(log)
         if (response.code === 0) {
           this.logs.unshift(response.data)
           this.saveToLocalStorage()
@@ -69,7 +69,7 @@ export const useTradingLogStore = defineStore('tradingLog', {
     
     async updateLog(logId, updates) {
       try {
-        const response = await currentApi.tradingLog.updateLog(logId, updates)
+        const response = await tradingLogApi.updateLog(logId, updates)
         if (response.code === 0) {
           const index = this.logs.findIndex(log => log.id === logId)
           if (index !== -1) {
@@ -93,7 +93,7 @@ export const useTradingLogStore = defineStore('tradingLog', {
     
     async getLogById(logId) {
       try {
-        const response = await currentApi.tradingLog.getLogDetail(logId)
+        const response = await tradingLogApi.getLogDetail(logId)
         if (response.code === 0) {
           return response.data
         }
@@ -107,7 +107,7 @@ export const useTradingLogStore = defineStore('tradingLog', {
     
     async deleteLog(logId) {
       try {
-        const response = await currentApi.tradingLog.deleteLog(logId)
+        const response = await tradingLogApi.deleteLog(logId)
         if (response.code === 0) {
           this.logs = this.logs.filter(log => log.id !== logId)
           this.saveToLocalStorage()

@@ -30,14 +30,11 @@
           <t-option value="hongkong" label="香港" />
           <t-option value="usa" label="美国" />
         </t-select>
-      </t-form-item>
+      </t-form-item>  
       
       <t-form-item label="股票分类" name="category">
         <t-select class="form-input-md" v-model="formData.category" placeholder="请选择股票分类">
-          <t-option value="main_board" label="主板" />
-          <t-option value="hk_main" label="港股主板" />
-          <t-option value="us_nasdaq" label="纳斯达克" />
-          <t-option value="us_nyse" label="纽约证券交易所" />
+          <t-option v-for="item in stockCategoryConfig" :key="item.id" :value="item.id" :label="item.name" />
         </t-select>
       </t-form-item>
       
@@ -64,7 +61,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
-
+import { stockCategoryConfig } from './config'
 const props = defineProps({
   isEditMode: {
     type: Boolean,

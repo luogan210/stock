@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上传功能测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .progress { width: 100%; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+        .progress-bar { height: 100%; background: #007bff; width: 0%; transition: width 0.3s; }
+        .info { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>大文件上传测试</h1>
+        
+        <div>
+            <input type="file" id="fileInput" accept="*/*">
+            <button class="btn-primary" onclick="startUpload()">开始上传</button>
+            <button class="btn-warning" onclick="pauseUpload()">暂停</button>
+            <button class="btn-success" onclick="resumeUpload()">继续</button>
+            <button class="btn-danger" onclick="cancelUpload()">取消</button>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="info" id="uploadInfo">
+            请选择文件并点击开始上传
+        </div>
+    </div>
+
+    <script>
+        // 简化的上传器
+        class SimpleUploader {
+            constructor() {
+                this.chunkSize = 1024 * 1024; // 1MB
+                this.maxConcurrent = 3;
+                this.uploadQueue = [];
+                this.currentUploads = 0;
+                this.paused = false;
+                this.uploadedChunks = new Set();
+            }
+
+            async uploadFile(file) {
+                const fileId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const chunks = this.splitFile(file);
+                
+                console.log(`开始上传: ${file.name}, 大小: ${this.formatSize(file.size)}, 分片数: ${chunks.length}`);
+                
+                // 初始化
+                await this.initUpload(fileId, file.name, file.size);
+                
+                // 创建任务队列
+                this.uploadQueue = chunks.map((chunk, index) => ({
+                    fileId, chunkIndex: index, chunk, retryCount: 0
+                }));
+                
+                // 开始上传
+                await this.startConcurrentUpload();
+                
+                // 完成上传
+                return await this.completeUpload(fileId);
+            }
+
+            splitFile(file) {
+                const chunks = [];
+                let start = 0;
+                while (start < file.size) {
+                    const end = Math.min(start + this.chunkSize, file.size);
+                    chunks.push(file.slice(start, end));
+                    start = end;
+                }
+                return chunks;
+            }
+
+            async initUpload(fileId, fileName, fileSize) {
+                const response = await fetch('/api/upload/init', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileId, fileName, fileSize, chunkSize: this.chunkSize })
+                });
+                return response.json();
+            }
+
+            async startConcurrentUpload() {
+                this.uploading = true;
+                this.paused = false;
+                
+                const workers = [];
+                for (let i = 0; i < this.maxConcurrent; i++) {
+                    workers.push(this.uploadWorker());
+                }
+                
+                await Promise.all(workers);
+            }
+
+            async uploadWorker() {
+                while (this.uploadQueue.length > 0 && !this.paused) {
+                    if (this.currentUploads >= this.maxConcurrent) {
+                        await this.sleep(100);
+                        continue;
+                    }
+
+                    const task = this.uploadQueue.shift();
+                    if (!task) break;
+
+                    this.currentUploads++;
+                    
+                    try {
+                        await this.uploadChunk(task);
+                        this.uploadedChunks.add(task.chunkIndex);
+                        this.updateProgress();
+                    } catch (error) {
+                        console.error(`分片 ${task.chunkIndex} 上传失败:`, error);
+                        if (task.retryCount < 3) {
+                            task.retryCount++;
+                            this.uploadQueue.unshift(task);
+                        }
+                    } finally {
+                        this.currentUploads--;
+                    }
+                }
+            }
+
+            async uploadChunk(task) {
+                const formData = new FormData();
+                formData.append('file', task.chunk);
+                formData.append('fileId', task.fileId);
+                formData.append('chunkIndex', task.chunkIndex);
+
+                const response = await fetch('/api/upload/chunk', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                return response.json();
+            }
+
+            async completeUpload(fileId) {
+                const response = await fetch('/api/upload/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileId })
+                });
+                return response.json();
+            }
+
+            pauseUpload() {
+                this.paused = true;
+                console.log('上传已暂停');
+            }
+
+            resumeUpload() {
+                this.paused = false;
+                console.log('上传已恢复');
+            }
+
+            cancelUpload() {
+                this.paused = true;
+                this.uploadQueue = [];
+                this.uploading = false;
+                console.log('上传已取消');
+            }
+
+            updateProgress() {
+                const totalChunks = this.uploadedChunks.size + this.uploadQueue.length;
+                const progress = totalChunks > 0 ? (this.uploadedChunks.size / totalChunks) * 100 : 0;
+                
+                document.getElementById('progressBar').style.width = `${progress}%`;
+                document.getElementById('uploadInfo').innerHTML = `
+                    进度: ${Math.round(progress)}%<br>
+                    已上传: ${this.uploadedChunks.size}<br>
+                    队列中: ${this.uploadQueue.length}<br>
+                    当前并发: ${this.currentUploads}
+                `;
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            formatSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        }
+
+        const uploader = new SimpleUploader();
+
+        function startUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('请选择文件');
+                return;
+            }
+            
+            uploader.uploadFile(file).then(result => {
+                console.log('上传成功:', result);
+                document.getElementById('uploadInfo').innerHTML += '<br><strong>上传成功!</strong>';
+            }).catch(error => {
+                console.error('上传失败:', error);
+                document.getElementById('uploadInfo').innerHTML += '<br><strong>上传失败!</strong>';
+            });
+        }
+
+        function pauseUpload() {
+            uploader.pauseUpload();
+        }
+
+        function resumeUpload() {
+            uploader.resumeUpload();
+        }
+
+        function cancelUpload() {
+            uploader.cancelUpload();
+        }
+    </script>
+</body>
+</html> 
